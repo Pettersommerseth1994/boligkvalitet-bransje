@@ -203,7 +203,7 @@ function kortBoenheter(pf) {
   const k = pf.klima || {};
   /* Spørsmålene om kjeller finnes bare for «Klimavennlig bolig». Rader uten svar vises ikke. */
   const miljo = S.visKlima(pf) || S.erKlimavennlig(pf) ? `<dl class="e-dl">${OP.rad('Totalt BTA på hele prosjektet', k.btaTotalt ? `${eTusen(k.btaTotalt)} m² BTA` : null)}
-    ${OP.rad('Antatt klimagassutslipp for prosjektet eksklusive kjellerareal', k.co2 ? `${eEsc(k.co2)} kg CO₂-ekv./m² BTA` : null)}${OP.rad('Har prosjektet kjeller?', OP.jaNei(k.harKjeller))}${OP.rad('Vil kjelleren være oppvarmet?', OP.jaNei(k.oppvarmetKjeller))}${k.harKjeller === true ? OP.rad('Antatt klimagassutslipp for kjellerarealet i prosjektet', k.co2Kjeller ? `${eEsc(k.co2Kjeller)} kg CO₂-ekv./m² BTA` : null) : ''}</dl>` : '';
+    ${OP.rad('Antatt klimagassutslipp for prosjektet uten kjellerareal', k.co2 ? `${eEsc(k.co2)} kg CO₂-ekv./m² BTA` : null)}${OP.rad('Har prosjektet kjeller?', OP.jaNei(k.harKjeller))}${OP.rad('Vil kjelleren være oppvarmet?', OP.jaNei(k.oppvarmetKjeller))}${k.harKjeller === true ? OP.rad('Antatt klimagassutslipp for kjellerarealet i prosjektet', k.co2Kjeller ? `${eEsc(k.co2Kjeller)} kg CO₂-ekv./m² BTA` : null) : ''}</dl>` : '';
   const kvalitetskrav = !a && S.visBK(pf) && B.kvalitetsBk(pf).length ? `<h3 class="e-h3">Kvalitetskrav</h3>
     <table class="e-tabell" style="margin-bottom:var(--space-5)"><thead><tr><th>Navn</th><th>Energi og Miljø</th><th>Universell utforming</th></tr></thead><tbody>
     ${B.kvalitetsBk(pf).map(k => `<tr><td>${eEsc(k.navn)}</td><td>${k.koder.map(kvalitet).filter(x => x && x.kat === 'EM').map(x => x.navn).join(', ')}</td><td>${k.koder.map(kvalitet).filter(x => x && x.kat === 'UU').map(x => x.navn).join(', ')}</td></tr>`).join('')}</tbody></table>` : '';

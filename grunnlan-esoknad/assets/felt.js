@@ -145,7 +145,7 @@ F.radio = ({ felt, label, hjelp, beskrivelse, valg, rad = false, nokkel = felt, 
           <input type="radio" name="${navn}" id="${navn}-${i}" value="${eEsc(String(o.v))}" data-felt="${felt}" data-type="${typeof o.v === 'boolean' ? 'bool' : 'radio'}"
             ${o.v === v ? 'checked' : ''} ${o.deaktivert ? 'disabled' : ''}>
           <span class="e-valg__tekst"><span>${o.l}${o.hjelp ? ` ${F.hjelpKnapp(`${nokkel}-${i}`)}` : ''}</span></span>
-        </label>${o.hjelp ? `<div style="margin:0 0 4px 34px">${F.hjelpTekst(`${nokkel}-${i}`, o.hjelp)}</div>` : ''}${o.under && o.v === v ? `<div class="e-underboks">${o.under}</div>` : ''}`).join('')}
+        </label>${o.hjelp ? `<div style="margin:0 0 4px 34px">${F.hjelpTekst(`${nokkel}-${i}`, o.hjelp)}</div>` : ''}${o.under && o.v === v ? `<div class="e-underboks${o.underUtenBoks ? ' e-underboks--uten-boks' : ''}">${o.under}</div>` : ''}`).join('')}
     </div>
     ${F.feilHtml(nokkel)}${etter}
   </fieldset>`;

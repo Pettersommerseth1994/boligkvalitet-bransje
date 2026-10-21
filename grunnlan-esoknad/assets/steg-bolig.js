@@ -82,7 +82,7 @@ STEG.boligkvaliteter = {
     }
     /* Bytter man bygningstype, tømmes BTA-andelen for typen som ikke lenger er valgt */
     if (felt === 'klima.bygningstype' && pf.klima) {
-      if (pf.klima.bygningstype !== 'BLOKK' && pf.klima.bygningstype !== 'BEGGE') delete pf.klima.btaBlokk;
+      if (pf.klima.bygningstype !== 'BLOKK') delete pf.klima.btaBlokk;
       if (pf.klima.bygningstype !== 'SMAHUS' && pf.klima.bygningstype !== 'BEGGE') delete pf.klima.btaSmahus;
     }
     const alle = /^adresseBk\.a(\d+)$/.exec(felt);
@@ -106,18 +106,11 @@ STEG.boligkvaliteter = {
       return !x || !S.utmalingsvarsel(pf, x.b, x.a, fo);
     }).length;
     return `
-      ${erKlimavennlig(pf) ? `${eCallout('info', `<p>For å kunne søke om lån til oppføring av klimavennlig bolig må det utarbeides et klimagassbudsjett etter NS 3720:2018.</p>
-        <ul class="e-mb0">
+      ${erKlimavennlig(pf) ? `<p>For å kunne søke om lån til oppføring av klimavennlig bolig må det utarbeides et klimagassbudsjett etter NS 3720:2018.</p>
+        <ul>
           <li>Ved søknadstidspunktet er det kun nødvendig med et foreløpig klimagassbudsjett som dokumentasjon.</li>
           <li>Ved søknad om utbetaling eller før videresalg må ferdig klimagassregnskap sendes inn som dokumentasjon.</li>
         </ul>
-        <p class="e-mt">Grenseverdiene for klimagassutslipp avhenger av om prosjektet har oppvarmet kjeller eller ikke, størrelsen på prosjektet og om bygningstypen er blokk.</p>
-        <ul class="e-mb0">
-          <li>For blokk er grenseverdiene 30% lavere enn TEK.</li>
-          <li>For småhusprosjekt med størrelse 1000 m² BTA eller mer, er grenseverdiene 20% lavere enn TEK.</li>
-          <li>For småhusprosjekt med størrelse mindre enn 1000 m² BTA er grenseverdiene 10% lavere enn TEK.</li>
-        </ul>
-        <p class="e-mt">Hvis prosjektet inneholder ulike bygningstyper eller både oppvarmet og uoppvarmet kjeller blir grenseverdiene vektet.</p>`)}
         ${blokkKlimabudsjett(pf)}
         ${tallMedEnhet({ felt: 'klima.btaTotalt', label: 'Hva er totalt BTA på hele prosjektet?', enhet: 'm² BTA', hjelp: BTA_HJELP })}
         ${blokkBygningstyper(pf)}
@@ -154,7 +147,7 @@ STEG.boligkvaliteter = {
       const k = pf.klima || {};
       if (k.harKlimabudsjett == null) feil('klima.harKlimabudsjett', 'Du må svare på om det er utarbeidet et klimagassbudsjett for prosjektet.');
       if (k.bygningstype == null) feil('klima.bygningstype', 'Feltet må fylles ut. - angi hvilke bygningstyper prosjektet inneholder');
-      const blokkTallOk = k.bygningstype === 'BLOKK' || k.bygningstype === 'BEGGE' ? !V.tom(k.btaBlokk) && V.heltall(k.btaBlokk) : null;
+      const blokkTallOk = k.bygningstype === 'BLOKK' ? !V.tom(k.btaBlokk) && V.heltall(k.btaBlokk) : null;
       if (blokkTallOk === false) feil('klima.btaBlokk', 'Feltet må fylles ut.');
       const smahusTallOk = k.bygningstype === 'SMAHUS' || k.bygningstype === 'BEGGE' ? !V.tom(k.btaSmahus) && V.heltall(k.btaSmahus) : null;
       if (smahusTallOk === false) feil('klima.btaSmahus', 'Feltet må fylles ut.');
@@ -436,17 +429,24 @@ function kategoriForType(pf, type) {
   return eNum((pf.klima || {}).btaTotalt) >= 1000 ? CO2_GRENSER.SMAHUS_STOR : CO2_GRENSER.SMAHUS;
 }
 
+/* Ved «Både blokk og småhus» spørres det bare om småhusandelen. Blokkandelen
+   er resten av totalt BTA, minus kjellerarealet som er fylt ut. */
+function btaBlokkVedBegge(k) {
+  const kjeller = k.harKjeller === true ? eNum(k.btaKjellerOppvarmet || 0) + eNum(k.btaKjellerUoppvarmet || 0) : 0;
+  return Math.max(0, eNum(k.btaTotalt) - eNum(k.btaSmahus) - kjeller);
+}
+
 /* Når prosjektet har «Både blokk og småhus» vektes grenseverdiene etter §
    2-3 (3): summen av (BTA × grenseverdi) for hver kategori, delt på
-   totalt BTA for kategoriene. Returnerer null før begge BTA-andelene er
-   fylt ut. */
+   totalt BTA for kategoriene. Returnerer null før totalt BTA og
+   småhusandelen er fylt ut. */
 function grenseByggVektet(pf) {
   const k = pf.klima || {};
   if (k.bygningstype === 'BLOKK') return kategoriForType(pf, 'BLOKK').bygg;
   if (k.bygningstype === 'SMAHUS') return kategoriForType(pf, 'SMAHUS').bygg;
   if (k.bygningstype === 'BEGGE') {
-    if (V.tom(k.btaBlokk) || V.tom(k.btaSmahus)) return null;
-    const btaB = eNum(k.btaBlokk); const btaS = eNum(k.btaSmahus);
+    if (V.tom(k.btaTotalt) || V.tom(k.btaSmahus)) return null;
+    const btaB = btaBlokkVedBegge(k); const btaS = eNum(k.btaSmahus);
     if (btaB + btaS <= 0) return null;
     return (btaB * kategoriForType(pf, 'BLOKK').bygg + btaS * kategoriForType(pf, 'SMAHUS').bygg) / (btaB + btaS);
   }
@@ -461,8 +461,8 @@ function kjellerGrenserForType(pf) {
   if (k.bygningstype === 'BLOKK') return kategoriForType(pf, 'BLOKK');
   if (k.bygningstype === 'SMAHUS') return kategoriForType(pf, 'SMAHUS');
   if (k.bygningstype === 'BEGGE') {
-    if (V.tom(k.btaBlokk) || V.tom(k.btaSmahus)) return null;
-    const btaB = eNum(k.btaBlokk); const btaS = eNum(k.btaSmahus);
+    if (V.tom(k.btaTotalt) || V.tom(k.btaSmahus)) return null;
+    const btaB = btaBlokkVedBegge(k); const btaS = eNum(k.btaSmahus);
     if (btaB + btaS <= 0) return null;
     const blokk = kategoriForType(pf, 'BLOKK'); const smahus = kategoriForType(pf, 'SMAHUS');
     return {
@@ -491,28 +491,35 @@ function vektetGrenseNotis(grense) {
   return eCallout('info', `<p class="e-mb0">Grenseverdien er vektet – den må være lavere enn <b>${fmtGrense(grense)} ${CO2_ENHET}</b>.</p>`);
 }
 
+/* Hva som er blokk og småhus, etter DiBKs veiledning til TEK17 § 14-2 (NS 3457-3) */
+const SMAHUS_HJELP = '<p class="e-mb0">Enebolig, to- til firemannsbolig, rekkehus, kjedehus og terrassehus på til og med tre etasjer.</p>';
+const BLOKK_HJELP = '<p class="e-mb0">Boligbygg med flere boliger som ikke regnes som småhus, typisk leilighetsbygg.</p>';
+
 /* Bygningstyper, for «Klimavennlig bolig». Ved «Både blokk og småhus» må
-   brukeren oppgi BTA-andelen for hver type, og grenseverdien for bygget
+   brukeren oppgi BTA-andelen for småhus, og grenseverdien for bygget
    blir et areavektet snitt av de to kategorienes grenseverdier. */
 function blokkBygningstyper(pf) {
   const k = pf.klima || {};
-  const btaBlokkFelt = btaAndelFelt({ felt: 'klima.btaBlokk', label: 'Hva er BTA for den totale andelen av blokk i prosjektet?', beskrivelse: 'Angi areal eksklusive kjellerareal.' });
-  const btaSmahusFelt = btaAndelFelt({ felt: 'klima.btaSmahus', label: 'Hva er BTA for den totale andelen av småhus i prosjektet?', beskrivelse: 'Angi areal eksklusive kjellerareal.' });
+  const btaBlokkFelt = btaAndelFelt({ felt: 'klima.btaBlokk', label: 'Hva er BTA for den totale andelen av blokk i prosjektet?', beskrivelse: 'Angi areal uten kjellerareal.' });
+  const btaSmahusFelt = btaAndelFelt({ felt: 'klima.btaSmahus', label: 'Hva er BTA for den totale andelen av småhus i prosjektet?', beskrivelse: 'Angi areal uten kjellerareal.' });
   const grenseBygg = grenseByggVektet(pf);
   const vektetNotis = k.bygningstype === 'BEGGE' && grenseBygg != null ? vektetGrenseNotis(grenseBygg) : '';
-  const skillelinje = '<hr style="border:0;border-top:1px solid var(--e-ramme);margin:var(--space-3) 0">';
+  const vektingInfo = k.bygningstype === 'BEGGE'
+    ? eCallout('info', '<p class="e-mb0">Hvis prosjektet inneholder ulike bygningstyper eller både oppvarmet og uoppvarmet kjeller blir grenseverdiene vektet.</p>')
+    : '';
   return `<h2 class="e-h2 e-mt">Bygningstyper</h2>
     ${F.radio({
       felt: 'klima.bygningstype',
       label: 'Hvilke bygningstyper inneholder prosjektet?',
       valg: [
-        { v: 'BLOKK', l: 'Blokk', under: btaBlokkFelt },
-        { v: 'SMAHUS', l: 'Småhus', under: btaSmahusFelt },
-        { v: 'BEGGE', l: 'Både blokk og småhus', under: `${btaBlokkFelt}${skillelinje}${btaSmahusFelt}` }
+        { v: 'BLOKK', l: 'Blokk', under: btaBlokkFelt, hjelp: BLOKK_HJELP },
+        { v: 'SMAHUS', l: 'Småhus', under: btaSmahusFelt, hjelp: SMAHUS_HJELP },
+        { v: 'BEGGE', l: 'Både blokk og småhus', under: btaSmahusFelt, underUtenBoks: true }
       ]
     })}
+    ${vektingInfo}
     ${vektetNotis}
-    ${tallMedEnhet({ felt: 'klima.co2', label: 'Hva er antatt kg CO₂-ekv./m² BTA for prosjektet eksklusive kjellerareal?', enhet: CO2_ENHET, etter: co2Advarsel(pf, 'klima.co2', grenseBygg) })}`;
+    ${tallMedEnhet({ felt: 'klima.co2', label: 'Hva er antatt kg CO₂-ekv./m² BTA for prosjektet uten kjellerareal?', enhet: CO2_ENHET, etter: co2Advarsel(pf, 'klima.co2', grenseBygg) })}`;
 }
 
 /* Kjellerarealet, for «Klimavennlig bolig». Kjelleren kan være delvis
@@ -536,7 +543,7 @@ const visCo2Kjeller = pf => erKlimavennlig(pf) && (pf.klima || {}).harKjeller ==
 function blokkKlima(pf) {
   return `<div class="e-avsnitt">
     ${tallMedEnhet({ felt: 'klima.btaTotalt', label: 'Hva er totalt BTA på hele prosjektet?', enhet: 'm² BTA', hjelp: BTA_HJELP })}
-    ${tallMedEnhet({ felt: 'klima.co2', label: 'Hva er antatt kg CO₂-ekv./m² BTA for prosjektet eksklusive kjellerareal?', enhet: CO2_ENHET, etter: co2Advarsel(pf, 'klima.co2', co2GrenseBygg(pf)) })}
+    ${tallMedEnhet({ felt: 'klima.co2', label: 'Hva er antatt kg CO₂-ekv./m² BTA for prosjektet uten kjellerareal?', enhet: CO2_ENHET, etter: co2Advarsel(pf, 'klima.co2', co2GrenseBygg(pf)) })}
     ${visCo2Kjeller(pf) ? tallMedEnhet({ felt: 'klima.co2Kjeller', label: 'Hva er antatt kg CO₂-ekv./m² BTA for kjellerarealet i prosjektet?', enhet: CO2_ENHET, etter: co2Advarsel(pf, 'klima.co2Kjeller', co2GrenseKjeller(pf)) }) : ''}
     ${erKlimavennlig(pf) ? '' : F.janei({ felt: 'klima.oppvarmetKjeller', label: 'Vil kjelleren være oppvarmet?', rad: false })}
   </div>`;

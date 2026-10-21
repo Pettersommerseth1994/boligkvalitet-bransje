@@ -299,6 +299,7 @@ a.e-stepper__lenke .e-stepper__tekst { text-decoration: underline; text-underlin
 .e-valg__tekst { display: flex; flex-direction: column; }
 .e-underboks { margin: var(--space-2) 0 var(--space-3) 34px; padding: var(--space-3) var(--space-4); background: var(--e-gra); border-radius: var(--radius-sm); }
 .e-underboks .e-felt { margin-bottom: 0; }
+.e-underboks--uten-boks { padding: 0; background: none; }
 
 .e-felt--feil .e-input, .e-felt--feil .e-select, .e-felt--feil .e-textarea, .e-input.er-feil, .e-select.er-feil { border: 2px solid var(--e-feil); }
 .e-felt--feil > legend, .e-felt--feil > .e-felt__labelrad legend { color: var(--e-feil); }
