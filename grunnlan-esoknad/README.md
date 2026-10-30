@@ -39,6 +39,7 @@ annen låntaker og tilskudd til utleieboliger virker som i dag.
 | `opprett-soknad.html` | «Opprett søknad»: tiltak, formål, avtale, låntaker og finansieringsmuligheter. |
 | `soknad.html` | Veiviseren: Prosjekt → Eiendom → Bolig → Økonomi → Vedlegg → Kundeopplysninger → Oppsummering. |
 | `kvittering.html` | «Søknaden er sendt til signering». |
+| `klima-forslag.html` | Fem forslag til klimagassavtrykket på Bolig-steget, etter Miro-skissen. Ikke koblet til søknaden. |
 | `endre-lantaker.html`, `igangsettelse.html`, `utsett-oppstart.html` | Valgene på en søknad som er innvilget. |
 
 To eksempelsøknader ligger klare første gang: en påbegynt, som også viser
