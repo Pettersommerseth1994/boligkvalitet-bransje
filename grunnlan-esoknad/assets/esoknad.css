@@ -224,7 +224,7 @@ a.e-stepper__lenke .e-stepper__tekst { text-decoration: underline; text-underlin
 .e-knapper__nav { display: flex; flex-wrap: wrap; gap: var(--space-3); }
 @media (max-width: 560px) {
   .e-knapper { flex-direction: column; align-items: stretch; }
-  .e-knapper__nav { flex-direction: column; align-items: stretch; width: 100%; }
+  .e-knapper__nav { flex-direction: column-reverse; align-items: stretch; width: 100%; }
   .e-knapper__nav .e-knapp { width: 100%; }
 }
 .e-knappegruppe { display: flex; flex-wrap: wrap; gap: var(--space-3); align-items: center; }

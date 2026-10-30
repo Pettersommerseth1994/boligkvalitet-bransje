@@ -47,8 +47,8 @@ STEG.oppsummering = {
         ${!OP.signeringGyldig(pf) ? eCallout('feil', '<p>Du må fullføre Signeringsseksjonen før du kan sende til signering</p>') : ''}
         <div class="e-knapper">
           <div class="e-knapper__nav">
-            <button type="button" class="e-knapp e-knapp--prominent" id="sendTilSignering" data-handling="send">Send til signering ${E_IKON.send}</button>
             <button type="button" class="e-knapp" data-nav="forrige">${E_IKON.pilVenstre}Forrige steg</button>
+            <button type="button" class="e-knapp e-knapp--prominent" id="sendTilSignering" data-handling="send">Send til signering ${E_IKON.send}</button>
           </div>
           <button type="button" class="e-knapp e-knapp--subtil" data-nav="avslutt">${E_IKON.hus}Lagre og avslutt</button>
         </div>` : ''}`;

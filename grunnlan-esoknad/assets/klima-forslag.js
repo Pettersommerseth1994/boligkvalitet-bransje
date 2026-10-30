@@ -303,8 +303,8 @@ const KF4 = {
         <div class="kf-framdrift" aria-hidden="true"><div style="width:${Math.round((KF4.i / skjermer.length) * 100)}%"></div></div>
         ${sporsmal}
         <div class="e-knappegruppe e-mt">
-          <button type="button" class="e-knapp e-knapp--prominent" data-handling="kf4Neste">Neste spørsmål ${E_IKON.pilHoyre}</button>
           ${KF4.i > 0 ? `<button type="button" class="e-knapp" data-handling="kf4Forrige">${E_IKON.pilVenstre}Forrige spørsmål</button>` : ''}
+          <button type="button" class="e-knapp e-knapp--prominent" data-handling="kf4Neste">Neste spørsmål ${E_IKON.pilHoyre}</button>
         </div>`;
     }
     return `<div class="kf-veiviser">${innhold}</div>${F.gruppefeil(`${p}-ferdig`)}`;
@@ -393,8 +393,8 @@ function kfTegn() {
       ${v.tegn(F.pf[p], p)}
       ${KF.v === 3 && KF4.i < KF4.skjermer(F.pf.d4 || {}).length ? '' : F.sammendrag()}
       <div class="e-knapper"><div class="e-knapper__nav">
-        <button type="button" class="e-knapp e-knapp--prominent" data-handling="kfNeste">Neste steg ${E_IKON.pilHoyre}</button>
         <button type="button" class="e-knapp" data-ikke-med="I forslagene går «Forrige steg» ikke noe sted.">${E_IKON.pilVenstre}Forrige steg</button>
+        <button type="button" class="e-knapp e-knapp--prominent" data-handling="kfNeste">Neste steg ${E_IKON.pilHoyre}</button>
       </div><button type="button" class="e-knapp e-knapp--subtil" data-handling="kfTom">Tøm svarene i dette forslaget</button></div>
     </div>
     <h2 class="e-h2" style="margin-top:var(--space-8)">Forutsetninger i alle forslagene</h2>

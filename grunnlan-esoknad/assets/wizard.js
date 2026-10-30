@@ -88,8 +88,8 @@ W.knapper = ({ neste = true, nesteDeaktivert = false, forrige = true } = {}) => 
   const i = W.stegIndeks(W.path);
   return `<div class="e-knapper">
     <div class="e-knapper__nav">
-      ${neste ? `<button type="button" class="e-knapp e-knapp--prominent" id="nesteSteg" data-nav="neste" ${nesteDeaktivert ? 'disabled' : ''}>Neste steg ${E_IKON.pilHoyre}</button>` : ''}
       ${forrige && i > 0 ? `<button type="button" class="e-knapp" id="forrigeSteg" data-nav="forrige">${E_IKON.pilVenstre}Forrige steg</button>` : ''}
+      ${neste ? `<button type="button" class="e-knapp e-knapp--prominent" id="nesteSteg" data-nav="neste" ${nesteDeaktivert ? 'disabled' : ''}>Neste steg ${E_IKON.pilHoyre}</button>` : ''}
     </div>
     <button type="button" class="e-knapp e-knapp--subtil" data-nav="avslutt">${E_IKON.hus}Lagre og avslutt</button>
   </div>`;
