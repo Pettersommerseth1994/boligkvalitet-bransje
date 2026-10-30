@@ -16,7 +16,7 @@ const KF_GRENSER = {
   SMAHUS_STOR: { navn: 'Småhus, minst 1000 m² BTA', bygg: 130, oppvarmet: 206, uoppvarmet: 159 },
   SMAHUS: { navn: 'Småhus, under 1000 m² BTA', bygg: 167, oppvarmet: 232, uoppvarmet: 179 }
 };
-const KF_TYPE = { BLOKK: 'Blokk', SMAHUS: 'Småhus' };
+const KF_TYPE = { BLOKK: 'Blokker', SMAHUS: 'Småhus' };
 const KF_DEL = { bygg: 'uten kjeller', oppvarmet: 'oppvarmet kjeller', uoppvarmet: 'uoppvarmet kjeller' };
 const KF_SMAHUS_HJELP = 'Enebolig, to- til firemannsbolig, rekkehus, kjedehus og terrassehus på til og med tre etasjer.';
 const KF_BLOKK_HJELP = 'Boligbygg med flere boliger som ikke regnes som småhus, typisk leilighetsbygg.';
@@ -96,8 +96,8 @@ const kfKrev = (f, felt, v, tom = 'Feltet må fylles ut.') => {
 };
 
 const KF_TYPER = [
-  { k: 'blokk', type: 'BLOKK', navn: 'blokk', bygget: 'blokken', flertall: 'blokkene', hjelp: KF_BLOKK_HJELP },
-  { k: 'smahus', type: 'SMAHUS', navn: 'småhus', bygget: 'småhusene', flertall: 'småhusene', hjelp: KF_SMAHUS_HJELP }
+  { k: 'blokk', type: 'BLOKK', navn: 'blokk', tittel: 'Blokker', enEllerFlere: 'én eller flere blokker', flertall: 'blokkene', hjelp: KF_BLOKK_HJELP },
+  { k: 'smahus', type: 'SMAHUS', navn: 'småhus', tittel: 'Småhus', enEllerFlere: 'ett eller flere småhus', flertall: 'småhusene', hjelp: KF_SMAHUS_HJELP }
 ];
 
 /* ═══ Forslag 1: Trinnvis, slik Miro-skissen er tegnet ════════════ */
@@ -116,17 +116,17 @@ const KF1 = {
   tegn: (d, p) => `${KF_TYPER.map(t => {
     const x = d[t.k] || {};
     const q = `${p}.${t.k}`;
-    return `<h2 class="e-h2 e-mt">${eStor(t.navn)}</h2>
-      ${F.janei({ felt: `${q}.med`, label: `Vil det forekomme ${t.navn} i prosjektet?`, hjelp: t.hjelp })}
+    return `<h2 class="e-h2 e-mt">${t.tittel}</h2>
+      ${F.janei({ felt: `${q}.med`, label: `Vil det være ${t.enEllerFlere} i prosjektet?`, hjelp: t.hjelp })}
       ${x.med === true ? `
-        ${kfTallFelt({ felt: `${q}.bta`, label: `Hva er BTA på ${t.navn}?`, beskrivelse: 'Uten kjellerareal.' })}
-        ${kfTallFelt({ felt: `${q}.co2`, label: `Hvor mye kg CO₂-utslipp vil det være for ${t.bygget}, utenom kjeller?`, enhet: KF_ENHET })}
-        ${F.janei({ felt: `${q}.kjeller`, label: `Vil det være kjeller i ${t.bygget}?` })}
+        ${kfTallFelt({ felt: `${q}.bta`, label: `Hva er samlet BTA for alle ${t.flertall}?`, beskrivelse: `Uten kjellerareal. Legg sammen BTA for alle ${t.flertall} i prosjektet.` })}
+        ${kfTallFelt({ felt: `${q}.co2`, label: `Hvor mye kg CO₂-utslipp vil det være for ${t.flertall} samlet, utenom kjeller?`, beskrivelse: 'Tallet for alle under ett, slik det står i klimagassbudsjettet.', enhet: KF_ENHET })}
+        ${F.janei({ felt: `${q}.kjeller`, label: `Vil det være kjeller i noen av ${t.flertall}?` })}
         ${x.kjeller === true ? `
-          ${kfTallFelt({ felt: `${q}.oppBta`, label: 'Hvor mange m² BTA oppvarmet kjeller vil det være?' })}
-          ${kfTallFelt({ felt: `${q}.uoppBta`, label: 'Hvor mange m² BTA uoppvarmet kjeller vil det være?' })}
-          ${kfTallFelt({ felt: `${q}.oppCo2`, label: 'Hvor mye CO₂-utslipp vil det være for den oppvarmede kjelleren?', enhet: KF_ENHET })}
-          ${kfTallFelt({ felt: `${q}.uoppCo2`, label: 'Hvor mye CO₂-utslipp vil det være for den uoppvarmede kjelleren?', enhet: KF_ENHET })}` : ''}` : ''}`;
+          ${kfTallFelt({ felt: `${q}.oppBta`, label: `Hvor mange m² BTA oppvarmet kjeller vil det være i ${t.flertall} til sammen?` })}
+          ${kfTallFelt({ felt: `${q}.uoppBta`, label: `Hvor mange m² BTA uoppvarmet kjeller vil det være i ${t.flertall} til sammen?` })}
+          ${kfTallFelt({ felt: `${q}.oppCo2`, label: 'Hvor mye CO₂-utslipp vil det være for de oppvarmede kjellerne samlet?', enhet: KF_ENHET })}
+          ${kfTallFelt({ felt: `${q}.uoppCo2`, label: 'Hvor mye CO₂-utslipp vil det være for de uoppvarmede kjellerne samlet?', enhet: KF_ENHET })}` : ''}` : ''}`;
   }).join('')}
     ${F.gruppefeil(`${p}-type`)}
     ${kfResultat(kfBeregn(KF1.deler(d)))}`,
@@ -134,10 +134,10 @@ const KF1 = {
     const f = [];
     KF_TYPER.forEach(t => {
       const x = d[t.k] || {}; const q = `${p}.${t.k}`;
-      if (x.med == null) f.push({ nokkel: `${q}.med`, melding: `Du må svare på om det skal være ${t.navn} i prosjektet.` });
+      if (x.med == null) f.push({ nokkel: `${q}.med`, melding: `Du må svare på om det skal være ${t.enEllerFlere} i prosjektet.` });
       if (x.med !== true) return;
       kfKrev(f, `${q}.bta`, x.bta); kfKrev(f, `${q}.co2`, x.co2);
-      if (x.kjeller == null) f.push({ nokkel: `${q}.kjeller`, melding: `Du må svare på om det vil være kjeller i ${t.bygget}.` });
+      if (x.kjeller == null) f.push({ nokkel: `${q}.kjeller`, melding: `Du må svare på om det vil være kjeller i noen av ${t.flertall}.` });
       if (x.kjeller === true) ['oppBta', 'uoppBta', 'oppCo2', 'uoppCo2'].forEach(k => kfKrev(f, `${q}.${k}`, x[k], k.endsWith('Bta') ? 'Feltet må fylles ut. Hvis det ikke er slik kjeller, skriv 0.' : 'Feltet må fylles ut.'));
     });
     if ((d.blokk || {}).med === false && (d.smahus || {}).med === false) f.push({ nokkel: `${p}-type`, melding: 'Prosjektet må ha blokk, småhus eller begge.' });
@@ -172,13 +172,14 @@ const KF2 = {
       const x = d[t.k] || {}; const q = `${p}.${t.k}`;
       const egne = alle.rader.filter(r => r.type === t.type);
       const par = (bta, co2, tittel) => `<h3 class="e-h4 e-mt">${tittel}</h3><div class="e-to">
-        ${kfTallFelt({ felt: `${q}.${bta}`, label: 'BTA' })}${kfTallFelt({ felt: `${q}.${co2}`, label: 'Antatt utslipp', enhet: KF_ENHET })}</div>`;
-      return eKort({ tittel: eStor(t.navn), kropp: `
-        ${par('bta', 'co2', `${eStor(t.navn)} uten kjeller`)}
-        ${F.radio({ felt: `${q}.kjeller`, label: `Har ${t.flertall} kjeller?`, valg: KF2_KJELLER })}
-        ${['OPP', 'BEGGE'].includes(x.kjeller) ? par('oppBta', 'oppCo2', 'Oppvarmet kjeller') : ''}
-        ${['UOPP', 'BEGGE'].includes(x.kjeller) ? par('uoppBta', 'uoppCo2', 'Uoppvarmet kjeller') : ''}`,
-        bunn: egne.length ? `<span class="e-liten">Grenseverdier for ${t.navn}: ${egne.map(r => `${KF_DEL[r.del]} <b>${r.grense}</b>`).join(' · ')}</span>` : '' });
+        ${kfTallFelt({ felt: `${q}.${bta}`, label: 'Samlet BTA' })}${kfTallFelt({ felt: `${q}.${co2}`, label: 'Antatt utslipp', enhet: KF_ENHET })}</div>`;
+      return eKort({ tittel: t.tittel, kropp: `
+        <p>Oppgi tallene for alle ${t.flertall} i prosjektet til sammen.</p>
+        ${par('bta', 'co2', `Alle ${t.flertall}, uten kjeller`)}
+        ${F.radio({ felt: `${q}.kjeller`, label: `Har noen av ${t.flertall} kjeller?`, valg: KF2_KJELLER })}
+        ${['OPP', 'BEGGE'].includes(x.kjeller) ? par('oppBta', 'oppCo2', 'Oppvarmet kjeller, til sammen') : ''}
+        ${['UOPP', 'BEGGE'].includes(x.kjeller) ? par('uoppBta', 'uoppCo2', 'Uoppvarmet kjeller, til sammen') : ''}`,
+        bunn: egne.length ? `<span class="e-liten">Grenseverdier for ${t.flertall}: ${egne.map(r => `${KF_DEL[r.del]} <b>${r.grense}</b>`).join(' · ')}</span>` : '' });
     }).join('')}
     ${kfResultat(alle)}`;
   },
@@ -188,7 +189,7 @@ const KF2 = {
     KF_TYPER.filter(t => (d.typer || []).includes(t.type)).forEach(t => {
       const x = d[t.k] || {}; const q = `${p}.${t.k}`;
       kfKrev(f, `${q}.bta`, x.bta); kfKrev(f, `${q}.co2`, x.co2);
-      if (!x.kjeller) f.push({ nokkel: `${q}.kjeller`, melding: `Du må svare på om ${t.flertall} har kjeller.` });
+      if (!x.kjeller) f.push({ nokkel: `${q}.kjeller`, melding: `Du må svare på om noen av ${t.flertall} har kjeller.` });
       if (['OPP', 'BEGGE'].includes(x.kjeller)) { kfKrev(f, `${q}.oppBta`, x.oppBta); kfKrev(f, `${q}.oppCo2`, x.oppCo2); }
       if (['UOPP', 'BEGGE'].includes(x.kjeller)) { kfKrev(f, `${q}.uoppBta`, x.uoppBta); kfKrev(f, `${q}.uoppCo2`, x.uoppCo2); }
     });
@@ -211,14 +212,14 @@ const KF3 = {
     const celle = (felt, label) => `<td data-feltboks="${felt}"><div class="e-enhet" style="gap:6px">
       <input class="e-input e-input--xs${F.harFeil(felt) ? ' er-feil' : ''}" style="margin:0" id="${F.id(felt)}" inputmode="numeric" data-felt="${felt}" data-type="tekst" data-levende value="${eEsc(F.hent(felt) ?? '')}" aria-label="${label}"></div>${F.feilHtml(felt)}</td>`;
     return `<h2 class="e-h2">Klimagassavtrykk</h2>
-      <p>Fyll ut radene som gjelder prosjektet, med tallene fra klimagassbudsjettet. La radene som ikke gjelder stå tomme.</p>
+      <p>Fyll ut radene som gjelder prosjektet, med tallene fra klimagassbudsjettet. Hver rad gjelder alle byggene av samme type til sammen. Har prosjektet tre blokker, legger du sammen BTA for alle tre. La radene som ikke gjelder stå tomme.</p>
       <div class="e-tabell-rulle"><table class="e-tabell">
         <thead><tr><th>Bygningsdel</th><th>BTA (m²)</th><th>Antatt utslipp<br><span class="e-liten" style="font-weight:400">${KF_ENHET}</span></th><th class="e-tall">Grense</th><th><span class="e-sr">Status</span></th></tr></thead>
         <tbody>${KF3_RADER.map((rad, i) => {
           const x = d[rad.k] || {};
           const beregnet = r.rader.find(y => y.type === rad.t.type && y.del === rad.del);
-          const navn = `${eStor(rad.t.navn)}, ${KF_DEL[rad.del]}`;
-          return `${i % 3 === 0 ? `<tr><th colspan="5" style="background:var(--e-gra)">${eStor(rad.t.navn)}</th></tr>` : ''}
+          const navn = `${rad.t.tittel}, ${KF_DEL[rad.del]}`;
+          return `${i % 3 === 0 ? `<tr><th colspan="5" style="background:var(--e-gra)">${rad.t.tittel}, til sammen</th></tr>` : ''}
             <tr><td>${eStor(KF_DEL[rad.del])}</td>${celle(`${p}.${rad.k}.bta`, `BTA for ${navn}`)}${celle(`${p}.${rad.k}.co2`, `Antatt utslipp for ${navn}`)}
             <td class="e-tall">${beregnet ? beregnet.grense : ''}</td><td>${beregnet && kfTall(x.co2) ? kfStatus(eNum(x.co2) <= beregnet.grense) : ''}</td></tr>`;
         }).join('')}</tbody>
@@ -235,8 +236,8 @@ const KF3 = {
     KF3_RADER.forEach(rad => {
       const x = d[rad.k] || {};
       if (V.tom(x.bta) && V.tom(x.co2)) return;
-      kfKrev(f, `${p}.${rad.k}.bta`, x.bta, `Fyll ut BTA for ${rad.t.navn}, ${KF_DEL[rad.del]}.`);
-      kfKrev(f, `${p}.${rad.k}.co2`, x.co2, `Fyll ut antatt utslipp for ${rad.t.navn}, ${KF_DEL[rad.del]}.`);
+      kfKrev(f, `${p}.${rad.k}.bta`, x.bta, `Fyll ut BTA for ${rad.t.flertall}, ${KF_DEL[rad.del]}.`);
+      kfKrev(f, `${p}.${rad.k}.co2`, x.co2, `Fyll ut antatt utslipp for ${rad.t.flertall}, ${KF_DEL[rad.del]}.`);
     });
     if (!['blokk_bygg', 'smahus_bygg'].some(k => !V.tom((d[k] || {}).bta))) f.push({ nokkel: `${p}-tabell`, melding: 'Fyll ut minst én rad for blokk eller småhus uten kjeller.' });
     return f;
@@ -291,13 +292,13 @@ const KF4 = {
     } else {
       const t = s.t; const q = `${p}.${t.k}`;
       const sporsmal = {
-        med: () => F.janei({ felt: `${q}.med`, label: `<span class="kf-sporsmal">Vil det forekomme ${t.navn} i prosjektet?</span>`, hjelp: t.hjelp }),
-        bygg: () => `<p class="kf-sporsmal">${eStor(t.navn)} uten kjeller</p><p>Skriv BTA og antatt utslipp for ${t.bygget}, utenom kjelleren.</p>
-          ${kfTallFelt({ felt: `${q}.bta`, label: 'BTA' })}${kfTallFelt({ felt: `${q}.co2`, label: 'Antatt utslipp', enhet: KF_ENHET })}`,
-        kjeller: () => F.avkryss({ felt: `${q}.kjeller`, label: `<span class="kf-sporsmal">Vil det være kjeller i ${t.bygget}?</span>`, beskrivelse: 'Kryss av for alle som gjelder.',
+        med: () => F.janei({ felt: `${q}.med`, label: `<span class="kf-sporsmal">Vil det være ${t.enEllerFlere} i prosjektet?</span>`, hjelp: t.hjelp }),
+        bygg: () => `<p class="kf-sporsmal">${eStor(t.flertall)} uten kjeller</p><p>Skriv samlet BTA og antatt utslipp for alle ${t.flertall}, utenom kjellerne.</p>
+          ${kfTallFelt({ felt: `${q}.bta`, label: 'Samlet BTA' })}${kfTallFelt({ felt: `${q}.co2`, label: 'Antatt utslipp', enhet: KF_ENHET })}`,
+        kjeller: () => F.avkryss({ felt: `${q}.kjeller`, label: `<span class="kf-sporsmal">Vil det være kjeller i noen av ${t.flertall}?</span>`, beskrivelse: 'Kryss av for alle som gjelder.',
           valg: [{ v: 'OPP', l: 'Oppvarmet kjeller' }, { v: 'UOPP', l: 'Uoppvarmet kjeller' }, { v: 'INGEN', l: 'Ingen kjeller' }] }),
-        opp: () => `<p class="kf-sporsmal">Oppvarmet kjeller i ${t.bygget}</p>${kfTallFelt({ felt: `${q}.oppBta`, label: 'BTA' })}${kfTallFelt({ felt: `${q}.oppCo2`, label: 'Antatt utslipp', enhet: KF_ENHET })}`,
-        uopp: () => `<p class="kf-sporsmal">Uoppvarmet kjeller i ${t.bygget}</p>${kfTallFelt({ felt: `${q}.uoppBta`, label: 'BTA' })}${kfTallFelt({ felt: `${q}.uoppCo2`, label: 'Antatt utslipp', enhet: KF_ENHET })}`
+        opp: () => `<p class="kf-sporsmal">Oppvarmet kjeller i ${t.flertall}, til sammen</p>${kfTallFelt({ felt: `${q}.oppBta`, label: 'Samlet BTA' })}${kfTallFelt({ felt: `${q}.oppCo2`, label: 'Antatt utslipp', enhet: KF_ENHET })}`,
+        uopp: () => `<p class="kf-sporsmal">Uoppvarmet kjeller i ${t.flertall}, til sammen</p>${kfTallFelt({ felt: `${q}.uoppBta`, label: 'Samlet BTA' })}${kfTallFelt({ felt: `${q}.uoppCo2`, label: 'Antatt utslipp', enhet: KF_ENHET })}`
       }[s.type]();
       innhold = `<p class="e-liten e-sekundaer e-mb0">Klimagassavtrykk · spørsmål ${KF4.i + 1} av ${skjermer.length}</p>
         <div class="kf-framdrift" aria-hidden="true"><div style="width:${Math.round((KF4.i / skjermer.length) * 100)}%"></div></div>
@@ -331,7 +332,7 @@ const KF5 = {
     return `<div class="kf-to-kol">
       <div>
         <h2 class="e-h2">Bygningsdeler i prosjektet</h2>
-        <p>Legg inn hver del av prosjektet med BTA og antatt utslipp fra klimagassbudsjettet. Kjeller legges inn som egen del.</p>
+        <p>Legg inn delene av prosjektet med BTA og antatt utslipp fra klimagassbudsjettet. Har prosjektet flere blokker eller småhus, kan hvert bygg legges inn for seg, eller like bygg samles i én del. Kjeller legges inn som egen del.</p>
         ${d.deler.map((x, i) => eKort({ tittel: `Bygningsdel ${i + 1}`, niva: 3, kropp: `
           ${F.velg({ felt: `${p}.deler.${i}.del`, label: 'Type', plassholder: '--- Velg bygningsdel ---', valg: KF5_VALG })}
           <div class="e-to">${kfTallFelt({ felt: `${p}.deler.${i}.bta`, label: 'BTA' })}${kfTallFelt({ felt: `${p}.deler.${i}.co2`, label: 'Antatt utslipp', enhet: KF_ENHET })}</div>`,
@@ -376,7 +377,8 @@ function kfTegn() {
     <h1 class="e-h1">Klimagassavtrykk på Bolig-steget</h1>
     <p class="e-ingress">Fem forslag til hvordan spørsmålene fra Miro-skissen kan stilles i e-søknaden for bransje, når formålet er klimavennlig bolig. Alle forslagene regner ut grenseverdiene, så dere kan prøve med ekte tall.</p>
     ${eCallout('noytral', `<p class="e-fet e-mb0">Miro-skissen, kort fortalt</p>
-      <p class="e-mb0">For både blokk og småhus: Vil det forekomme i prosjektet? Hvis ja, hva er BTA, og hvor stort er utslippet utenom kjeller? Vil det være kjeller? Hvis ja, hvor mange m² oppvarmet og uoppvarmet kjeller, og hvor stort er utslippet for hver av dem?</p>`)}
+      <p>For både blokk og småhus: Vil det forekomme i prosjektet? Hvis ja, hva er BTA, og hvor stort er utslippet utenom kjeller? Vil det være kjeller? Hvis ja, hvor mange m² oppvarmet og uoppvarmet kjeller, og hvor stort er utslippet for hver av dem?</p>
+      <p class="e-mb0">Et prosjekt kan ha flere blokker, flere småhus og kjeller under flere av dem. Derfor spør alle forslagene om tallene for alle byggene av samme type til sammen, og forslag 5 lar dem også legges inn hver for seg.</p>`)}
     <div class="kf-faner" role="tablist" aria-label="Forslag">
       ${KF_FORSLAG.map((f, i) => `<button type="button" role="tab" class="kf-fane" aria-selected="${i === KF.v}" data-handling="kfVelg" data-v="${i}"><span class="kf-fane__nr">${i + 1}</span>${f.navn}</button>`).join('')}
     </div>
