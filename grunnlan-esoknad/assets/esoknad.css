@@ -268,7 +268,7 @@ a.e-stepper__lenke .e-stepper__tekst { text-decoration: underline; text-underlin
 .e-felt__labelrad .e-felt__label, .e-felt__labelrad legend { margin-bottom: 0; }
 .e-felt legend { float: left; width: 100%; }
 .e-felt legend ~ * { clear: both; }
-.e-felt legend .e-hjelp { margin-left: 4px; vertical-align: -5px; }
+.e-felt legend .e-hjelp { margin-left: 4px; vertical-align: 2px; line-height: 1; }
 .e-felt__hjelp { display: block; color: var(--e-sekundaer); margin: 2px 0 var(--space-2); font-size: var(--text-sm); }
 .e-felt__verdi { margin: 0; }
 
