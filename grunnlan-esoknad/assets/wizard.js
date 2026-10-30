@@ -53,13 +53,15 @@ W.visSteg = (path, { erstatt = false, historikk = true } = {}) => {
   if (F.side.foer) F.side.foer(W.pf);
   const url = `?id=${W.pf.id}&steg=${path}`;
   if (historikk) { if (erstatt) history.replaceState(null, '', url); else history.pushState(null, '', url); }
-  W.tegnSkall();
+  W.tegnSkall(true);
   F.tegn();
   document.title = `${S.STEG[W.stegIndeks(path)].tittel} | ${E_TJENESTE}`;
   window.scrollTo(0, 0);
 };
 
-W.tegnSkall = () => {
+/* animer: bare når man kommer til steget. Ellers tegnes stepperen
+   stille, så den ikke animeres på nytt ved hver endring på siden. */
+W.tegnSkall = (animer = false) => {
   const pf = W.pf;
   const i = W.stegIndeks(W.path);
   const bred = STEG[W.path].bred;
@@ -75,7 +77,7 @@ W.tegnSkall = () => {
   }).join('');
   document.getElementById('skall').innerHTML = `
     <p class="e-soknadstype"><span class="e-soknadstype__navn">${eEsc(pf.navn || '')}</span>(${S.TILTAK[pf.prosjektTiltakKode].kort})</p>
-    ${W.kanEndres() ? `<nav class="e-stepper${W.stepperApen ? ' er-apen' : ''}" aria-label="Steg i søknaden">
+    ${W.kanEndres() ? `<nav class="e-stepper${W.stepperApen ? ' er-apen' : ''}${animer ? '' : ' e-stepper--stille'}" aria-label="Steg i søknaden">
       <button type="button" class="e-stepper__mobil" data-stepper aria-expanded="${W.stepperApen}">
         <span><span class="e-liten e-sekundaer">Steg ${i + 1} av ${S.STEG.length}</span><b>${S.STEG[i].tittel}</b></span>${E_IKON.pilNed}
       </button>

@@ -170,6 +170,7 @@ a.e-stepper__lenke .e-stepper__tekst { text-decoration: underline; text-underlin
 @keyframes e-aktiv { 0%, 50% { background: var(--e-ramme); color: var(--e-mork); transform: scale(1); } 65% { transform: scale(1.2); } 100% { transform: none; } }
 @keyframes e-strek { from { transform: scaleX(0); } to { transform: none; } }
 @media (prefers-reduced-motion: reduce) { .e-stepper__steg.er-aktiv .e-stepper__ikon, .e-stepper__steg.er-aktiv::before { animation: none; } }
+.e-stepper--stille .e-stepper__steg.er-aktiv .e-stepper__ikon, .e-stepper--stille .e-stepper__steg.er-aktiv::before { animation: none; }
 
 .e-stepper__mobil { display: none; }
 @media (max-width: 767px) {

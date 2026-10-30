@@ -360,13 +360,13 @@ const KF_FORSLAG = [KF1, KF2, KF3, KF4, KF5];
 
 /* ═══ Siden ═══════════════════════════════════════════════════════ */
 
-const KF = { v: 0, visFeil: [false, false, false, false, false] };
+const KF = { v: 0, visFeil: [false, false, false, false, false], animert: false };
 
 function kfSkall() {
   const steg = S.STEG.map((s, j) => `<li class="e-stepper__steg${j < 2 ? ' er-ferdig' : ''}${j === 2 ? ' er-aktiv' : ''}">
     <span class="e-stepper__lenke"><span class="e-stepper__ikon">${E_IKON[s.ikon]}</span><span class="e-stepper__tekst" data-nr="${j + 1}">${s.tittel}</span></span></li>`).join('');
   return `<p class="e-soknadstype"><span class="e-soknadstype__navn">Kaiområdet boliger</span>(Oppføring)</p>
-    <nav class="e-stepper" aria-label="Steg i søknaden (eksempel)"><ol class="e-stepper__liste">${steg}</ol></nav>`;
+    <nav class="e-stepper${KF.animert ? ' e-stepper--stille' : ''}" aria-label="Steg i søknaden (eksempel)"><ol class="e-stepper__liste">${steg}</ol></nav>`;
 }
 
 function kfTegn() {
@@ -455,4 +455,6 @@ function klimaForslag() {
   };
   F.koble(document.getElementById('side'));
   F.tegn();
+  /* Stepperen animeres bare første gang siden tegnes */
+  KF.animert = true;
 }
