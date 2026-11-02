@@ -476,13 +476,13 @@ function kvResultat(r) {
     : ok ? '<span class="kv-ok">✓ Innenfor</span>' : '<span class="kv-over">✗ Over grensen</span>');
   if (!r.rader.length) return '<div class="kv-resultat"><h3 class="e-h4">Grenseverdier for prosjektet</h3><p class="e-sekundaer e-mb0">Fyll ut BTA for å se grenseverdiene.</p></div>';
   const linje = (navn, g) => (g ? `<tr class="e-tabell__sum"><td>${navn}${g.vektet ? ', vektet' : ''}</td><td class="e-tall">${eTusen(g.bta)}</td>
-    <td class="e-tall">${g.utslipp == null ? '' : fmtGrense(g.utslipp)}</td><td class="e-tall">${fmtGrense(g.grense)}</td><td>${status(g.ok)}</td></tr>` : '');
+    <td class="e-tall">${g.utslipp == null ? '' : fmtGrense(g.utslipp)}</td><td class="e-tall">${fmtGrense(g.grense)}</td><td class="e-tall">${status(g.ok)}</td></tr>` : '');
   return `<div class="kv-resultat" aria-live="polite">
     <h3 class="e-h4">Grenseverdier for prosjektet</h3>
     <div class="e-tabell-rulle"><table class="e-tabell">
-      <thead><tr><th>Del</th><th class="e-tall">m² BTA</th><th class="e-tall">Antatt</th><th class="e-tall">Grense</th><th>Status</th></tr></thead>
+      <thead><tr><th>Del</th><th class="e-tall">m² BTA</th><th class="e-tall">Antatt</th><th class="e-tall">Grense</th><th class="e-tall">Status</th></tr></thead>
       <tbody>${r.rader.map(d => `<tr${d.over ? ' class="kv-rad--over"' : ''}><td>${d.t.tittel}, ${KV_DEL[d.del]}</td><td class="e-tall">${eTusen(d.bta)}</td>
-        <td class="e-tall">${kvTall(d.co2) ? eEsc(d.co2) : ''}</td><td class="e-tall">${d.grense}</td><td>${status(d.over == null ? null : !d.over)}</td></tr>`).join('')}
+        <td class="e-tall">${kvTall(d.co2) ? eEsc(d.co2) : ''}</td><td class="e-tall">${d.grense}</td><td class="e-tall">${status(d.over == null ? null : !d.over)}</td></tr>`).join('')}
         ${linje('Bygg uten kjeller', r.bygg)}${linje('Kjeller', r.kjeller)}</tbody>
     </table></div>
     <p class="e-liten e-sekundaer e-mb0">Totalt BTA for prosjektet: ${eTusen(r.totalBta)} m². Utslipp og grenseverdier er i ${CO2_ENHET}.</p>
