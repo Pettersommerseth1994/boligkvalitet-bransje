@@ -111,9 +111,7 @@ STEG.boligkvaliteter = {
           <li>Ved søknad om utbetaling eller før videresalg må ferdig klimagassregnskap sendes inn som dokumentasjon.</li>
         </ul>`)}
         ${blokkKlimabudsjett(pf)}
-        ${tallMedEnhet({ felt: 'klima.btaTotalt', label: 'Hva er totalt BTA på hele prosjektet?', enhet: 'm² BTA', hjelp: BTA_HJELP })}
-        ${blokkBygningstyper(pf)}
-        ${blokkKjellerareal(pf)}` : ''}
+        ${blokkKlimaTyper(pf)}` : ''}
       ${a ? blokkKvalitetskrav(pf) : ''}
       ${B.visB(pf) ? blokkEnergikarakter(pf) : ''}
       ${c && !erKlimavennlig(pf) ? blokkKlima(pf) : ''}
@@ -145,43 +143,24 @@ STEG.boligkvaliteter = {
     if (erKlimavennlig(pf)) {
       const k = pf.klima || {};
       if (k.harKlimabudsjett == null) feil('klima.harKlimabudsjett', 'Du må svare på om det er utarbeidet et klimagassbudsjett for prosjektet.');
-      if (k.bygningstype == null) feil('klima.bygningstype', 'Feltet må fylles ut. - angi hvilke bygningstyper prosjektet inneholder');
-      const blokkTallOk = k.bygningstype === 'BEGGE' ? !V.tom(k.btaBlokk) && V.heltall(k.btaBlokk) : null;
-      if (blokkTallOk === false) feil('klima.btaBlokk', 'Feltet må fylles ut.');
-      const smahusTallOk = k.bygningstype === 'BEGGE' ? !V.tom(k.btaSmahus) && V.heltall(k.btaSmahus) : null;
-      if (smahusTallOk === false) feil('klima.btaSmahus', 'Feltet må fylles ut.');
-      const totaltTallOk = !V.tom(k.btaTotalt) && V.heltall(k.btaTotalt);
-      if (totaltTallOk && (blokkTallOk || smahusTallOk)) {
-        const sumByggandeler = (blokkTallOk ? eNum(k.btaBlokk) : 0) + (smahusTallOk ? eNum(k.btaSmahus) : 0);
-        if (sumByggandeler > eNum(k.btaTotalt)) {
-          const melding = 'Summen av BTA for blokk og småhus kan ikke være større enn totalt BTA for prosjektet.';
-          if (blokkTallOk) feil('klima.btaBlokk', melding);
-          if (smahusTallOk) feil('klima.btaSmahus', melding);
-        }
-      }
-      if (V.tom(k.co2) || !V.heltall(k.co2)) feil('klima.co2', 'Feltet må fylles ut.');
-      if (k.harKjeller == null) feil('klima.harKjeller', 'Du må svare på om prosjektet har kjeller.');
-      else if (k.harKjeller === true) {
-        const uoppvarmetTallOk = !V.tom(k.btaKjellerUoppvarmet) && V.heltall(k.btaKjellerUoppvarmet);
-        if (!uoppvarmetTallOk) feil('klima.btaKjellerUoppvarmet', 'Feltet må fylles ut - hvis prosjektet ikke har uoppvarmet kjeller angi 0 BTA');
-        const oppvarmetTallOk = !V.tom(k.btaKjellerOppvarmet) && V.heltall(k.btaKjellerOppvarmet);
-        if (!oppvarmetTallOk) feil('klima.btaKjellerOppvarmet', 'Feltet må fylles ut - hvis prosjektet ikke har oppvarmet kjeller angi 0 BTA');
-        if (totaltTallOk && (uoppvarmetTallOk || oppvarmetTallOk)) {
-          const sumKjeller = (uoppvarmetTallOk ? eNum(k.btaKjellerUoppvarmet) : 0) + (oppvarmetTallOk ? eNum(k.btaKjellerOppvarmet) : 0);
-          if (sumKjeller > eNum(k.btaTotalt)) {
-            const meldingKjeller = 'Summen av BTA for oppvarmet og uoppvarmet kjeller kan ikke være større enn totalt BTA for prosjektet.';
-            if (uoppvarmetTallOk) feil('klima.btaKjellerUoppvarmet', meldingKjeller);
-            if (oppvarmetTallOk) feil('klima.btaKjellerOppvarmet', meldingKjeller);
-          }
-        }
-        if (V.tom(k.co2Kjeller) || !V.heltall(k.co2Kjeller)) feil('klima.co2Kjeller', 'Feltet må fylles ut.');
-      }
+      if (V.tom(k.typer)) feil('klima.typer', 'Du må krysse av for hvilke bygningstyper prosjektet skal ha.');
+      KV_TYPER.filter(t => (k.typer || []).includes(t.type)).forEach(t => {
+        const x = k[t.k] || {}; const q = `klima.${t.k}`;
+        const tall = (felt, verdi) => {
+          if (V.tom(verdi)) feil(`${q}.${felt}`, 'Feltet må fylles ut.');
+          else if (!V.heltall(verdi)) feil(`${q}.${felt}`, 'Feltet kan bare inneholde tall, for eksempel 1200.');
+        };
+        tall('bta', x.bta); tall('co2', x.co2);
+        if (!x.kjeller) feil(`${q}.kjeller`, `Du må svare på om noen av ${t.flertall} har kjeller.`);
+        if (['OPP', 'BEGGE'].includes(x.kjeller)) { tall('oppBta', x.oppBta); tall('oppCo2', x.oppCo2); }
+        if (['UOPP', 'BEGGE'].includes(x.kjeller)) { tall('uoppBta', x.uoppBta); tall('uoppCo2', x.uoppCo2); }
+      });
     }
-    if (B.visC(pf)) {
+    if (B.visC(pf) && !erKlimavennlig(pf)) {
       const k = pf.klima || {};
       if (V.tom(k.btaTotalt)) feil('klima.btaTotalt', 'Du må skrive totalt BTA for prosjektet.');
       else if (!V.heltall(k.btaTotalt) || eNum(k.btaTotalt) < 1) feil('klima.btaTotalt', 'BTA kan bare være tall, for eksempel 1200.');
-      if (!erKlimavennlig(pf)) {
+      {
         if (V.tom(k.co2)) feil('klima.co2', 'Du må skrive antatt kg CO₂-ekv./m² BTA for prosjektet.');
         else if (!V.heltall(k.co2)) feil('klima.co2', 'Klimagassavtrykket kan bare være tall, for eksempel 150.');
         if (k.oppvarmetKjeller == null) feil('klima.oppvarmetKjeller', 'Du må svare på om kjelleren vil være oppvarmet.');
@@ -408,136 +387,136 @@ function tallMedEnhet({ felt, label, enhet, hjelp, etter = '' }) {
   </div>`;
 }
 
-/* Som tallMedEnhet, men med en alltid synlig undertekst i stedet for en
-   skjult hjelpetekst bak et «?»-ikon. Brukes for BTA-andelene under. */
-function btaAndelFelt({ felt, label, beskrivelse }) {
-  const id = F.id(felt);
-  return `<div class="e-felt${F.harFeil(felt) ? ' e-felt--feil' : ''}" data-feltboks="${felt}">
-    <label class="e-felt__label" for="${id}">${label}</label>
-    ${beskrivelse ? `<span class="e-felt__hjelp" id="${id}-besk">${beskrivelse}</span>` : ''}
-    <div class="e-enhet"><input class="e-input e-input--s" id="${id}" inputmode="numeric" data-felt="${felt}" data-type="tekst" value="${eEsc(F.hent(felt) ?? '')}" aria-describedby="${beskrivelse ? `${id}-besk ` : ''}${id}-feil"><span class="e-enhet__tekst">m² BTA</span></div>
-    ${F.feilHtml(felt)}
-  </div>`;
-}
-
-/* Grenseverdikategorien (bygg/oppvarmet/uoppvarmet kjeller) for én
-   bygningstype. For småhus avgjør totalt BTA om prosjektet er stort eller
-   lite, akkurat som i den automatiske kategoriseringen i co2Kategori(). */
-function kategoriForType(pf, type) {
-  if (type === 'BLOKK') return CO2_GRENSER.BOLIGBLOKK;
-  return eNum((pf.klima || {}).btaTotalt) >= 1000 ? CO2_GRENSER.SMAHUS_STOR : CO2_GRENSER.SMAHUS;
-}
-
-/* Når prosjektet har «Både blokk og småhus» vektes grenseverdiene etter §
-   2-3 (3): summen av (BTA × grenseverdi) for hver kategori, delt på
-   totalt BTA for kategoriene. Returnerer null før begge BTA-andelene er
-   fylt ut. */
-function grenseByggVektet(pf) {
-  const k = pf.klima || {};
-  if (k.bygningstype === 'BLOKK') return kategoriForType(pf, 'BLOKK').bygg;
-  if (k.bygningstype === 'SMAHUS') return kategoriForType(pf, 'SMAHUS').bygg;
-  if (k.bygningstype === 'BEGGE') {
-    if (V.tom(k.btaBlokk) || V.tom(k.btaSmahus)) return null;
-    const btaB = eNum(k.btaBlokk); const btaS = eNum(k.btaSmahus);
-    if (btaB + btaS <= 0) return null;
-    return (btaB * kategoriForType(pf, 'BLOKK').bygg + btaS * kategoriForType(pf, 'SMAHUS').bygg) / (btaB + btaS);
-  }
-  return null;
-}
-
-/* Grenseverdiene for oppvarmet/uoppvarmet kjeller for den valgte
-   bygningstypen, vektet mellom blokk og småhus når «Begge» er valgt
-   (samme BTA-andeler og prinsipp som for bygget). */
-function kjellerGrenserForType(pf) {
-  const k = pf.klima || {};
-  if (k.bygningstype === 'BLOKK') return kategoriForType(pf, 'BLOKK');
-  if (k.bygningstype === 'SMAHUS') return kategoriForType(pf, 'SMAHUS');
-  if (k.bygningstype === 'BEGGE') {
-    if (V.tom(k.btaBlokk) || V.tom(k.btaSmahus)) return null;
-    const btaB = eNum(k.btaBlokk); const btaS = eNum(k.btaSmahus);
-    if (btaB + btaS <= 0) return null;
-    const blokk = kategoriForType(pf, 'BLOKK'); const smahus = kategoriForType(pf, 'SMAHUS');
-    return {
-      oppvarmet: (btaB * blokk.oppvarmet + btaS * smahus.oppvarmet) / (btaB + btaS),
-      uoppvarmet: (btaB * blokk.uoppvarmet + btaS * smahus.uoppvarmet) / (btaB + btaS)
-    };
-  }
-  return null;
-}
-
-/* Den vektede grenseverdien for kjellerarealet, på tvers av uoppvarmet og
-   oppvarmet BTA. Returnerer null før begge BTA-andelene for kjelleren er
-   fylt ut. */
-function grenseKjellerVektet(pf) {
-  const k = pf.klima || {};
-  if (V.tom(k.btaKjellerUoppvarmet) || V.tom(k.btaKjellerOppvarmet)) return null;
-  const btaU = eNum(k.btaKjellerUoppvarmet); const btaO = eNum(k.btaKjellerOppvarmet);
-  if (btaU + btaO <= 0) return null;
-  const kat = kjellerGrenserForType(pf);
-  if (!kat) return null;
-  return (btaU * kat.uoppvarmet + btaO * kat.oppvarmet) / (btaU + btaO);
-}
-
-/* En kort informasjonsboks med den utregnede, vektede grenseverdien. */
-function vektetGrenseNotis(grense) {
-  return eCallout('info', `<p class="e-mb0">Grenseverdien er vektet – den må være lavere enn <b>${fmtGrense(grense)} ${CO2_ENHET}</b>.</p>`);
-}
-
 /* Hva som er blokk og småhus, etter DiBKs veiledning til TEK17 § 14-2 (NS 3457-3) */
 const SMAHUS_HJELP = '<p class="e-mb0">Enebolig, to- til firemannsbolig, rekkehus, kjedehus og terrassehus på til og med tre etasjer.</p>';
 const BLOKK_HJELP = '<p class="e-mb0">Boligbygg med flere boliger som ikke regnes som småhus, typisk leilighetsbygg.</p>';
 
-/* Bygningstyper, for «Klimavennlig bolig». Ved «Både blokk og småhus» må
-   brukeren oppgi BTA-andelen for hver type, og grenseverdien for bygget
-   blir et areavektet snitt av de to kategorienes grenseverdier. */
-function blokkBygningstyper(pf) {
+/* ═══ Klimagassavtrykk for «Klimavennlig bolig» ═════════════════
+   Forslag 2 fra klima-forslag.html: man krysser av for blokk og/eller
+   småhus, og hver type får et kort med samlet BTA og antatt utslipp,
+   uten kjeller og for oppvarmet og uoppvarmet kjeller.
+
+   Grenseverdien for hver del står under utslippsfeltet og i tabellen
+   nederst. Bygget uten kjeller og kjelleren kontrolleres hver for seg.
+   Har en av dem flere deler, vektes både grenseverdien og utslippet
+   etter BTA (§ 2-3 (3)): summen av BTA × verdi, delt på summen av BTA.
+   Småhusene regnes som et prosjekt på minst 1000 m² når all BTA for
+   småhus, med kjeller, er 1000 eller mer.
+   ─────────────────────────────────────────────────────────────────── */
+
+const KV_TYPER = [
+  { k: 'blokk', type: 'BLOKK', tittel: 'Blokker', flertall: 'blokkene', hjelp: BLOKK_HJELP },
+  { k: 'smahus', type: 'SMAHUS', tittel: 'Småhus', flertall: 'småhusene', hjelp: SMAHUS_HJELP }
+];
+const KV_DEL = { bygg: 'uten kjeller', oppvarmet: 'oppvarmet kjeller', uoppvarmet: 'uoppvarmet kjeller' };
+const KV_KJELLER = [
+  { v: 'INGEN', l: 'Nei' }, { v: 'OPP', l: 'Ja, bare oppvarmet kjeller' },
+  { v: 'UOPP', l: 'Ja, bare uoppvarmet kjeller' }, { v: 'BEGGE', l: 'Ja, både oppvarmet og uoppvarmet kjeller' }
+];
+const kvTall = v => !V.tom(v) && V.heltall(v);
+
+/* Delene prosjektet har, ut fra avkrysningene */
+function kvDeler(pf) {
   const k = pf.klima || {};
-  const btaBlokkFelt = btaAndelFelt({ felt: 'klima.btaBlokk', label: 'Hva er BTA for den totale andelen av blokk i prosjektet?', beskrivelse: 'Angi areal uten kjellerareal.' });
-  const btaSmahusFelt = btaAndelFelt({ felt: 'klima.btaSmahus', label: 'Hva er BTA for den totale andelen av småhus i prosjektet?', beskrivelse: 'Angi areal uten kjellerareal.' });
-  const grenseBygg = grenseByggVektet(pf);
-  const vektetNotis = k.bygningstype === 'BEGGE' && grenseBygg != null ? vektetGrenseNotis(grenseBygg) : '';
-  const vektingInfo = k.bygningstype === 'BEGGE'
-    ? eCallout('info', '<p class="e-mb0">Hvis prosjektet inneholder ulike bygningstyper eller både oppvarmet og uoppvarmet kjeller blir grenseverdiene vektet.</p>')
-    : '';
-  return `<h2 class="e-h2 e-mt">Bygningstyper</h2>
-    ${F.radio({
-      felt: 'klima.bygningstype',
-      label: 'Hvilke bygningstyper inneholder prosjektet?',
-      valg: [
-        { v: 'BLOKK', l: 'Blokk', hjelp: BLOKK_HJELP },
-        { v: 'SMAHUS', l: 'Småhus', hjelp: SMAHUS_HJELP },
-        { v: 'BEGGE', l: 'Både blokk og småhus', under: `${btaBlokkFelt}${btaSmahusFelt}`, underUtenBoks: true }
-      ]
-    })}
-    ${vektingInfo}
-    ${vektetNotis}
-    ${tallMedEnhet({ felt: 'klima.co2', label: 'Hva er antatt kg CO₂-ekv./m² BTA for prosjektet uten kjellerareal?', enhet: CO2_ENHET, etter: co2Advarsel(pf, 'klima.co2', grenseBygg) })}`;
+  return KV_TYPER.filter(t => (k.typer || []).includes(t.type)).flatMap(t => {
+    const x = k[t.k] || {};
+    return [{ t, del: 'bygg', bta: x.bta, co2: x.co2 },
+      ...(['OPP', 'BEGGE'].includes(x.kjeller) ? [{ t, del: 'oppvarmet', bta: x.oppBta, co2: x.oppCo2 }] : []),
+      ...(['UOPP', 'BEGGE'].includes(x.kjeller) ? [{ t, del: 'uoppvarmet', bta: x.uoppBta, co2: x.uoppCo2 }] : [])];
+  });
 }
 
-/* Kjellerarealet, for «Klimavennlig bolig». Kjelleren kan være delvis
-   oppvarmet og delvis uoppvarmet, så grenseverdien blir et areavektet
-   snitt av de to, på samme måte som for bygningstypene over. */
-function blokkKjellerareal(pf) {
-  const k = pf.klima || {};
-  const uoppvarmetFelt = btaAndelFelt({ felt: 'klima.btaKjellerUoppvarmet', label: 'Hva er BTA for den totale andelen av uoppvarmet kjeller i prosjektet?' });
-  const oppvarmetFelt = btaAndelFelt({ felt: 'klima.btaKjellerOppvarmet', label: 'Hva er BTA for den totale andelen av oppvarmet kjeller i prosjektet?' });
-  const grenseKjeller = grenseKjellerVektet(pf);
-  const vektetNotis = grenseKjeller != null ? vektetGrenseNotis(grenseKjeller) : '';
-  return `<h2 class="e-h2 e-mt">Kjellerareal</h2>
-    ${F.janei({ felt: 'klima.harKjeller', label: 'Har prosjektet kjeller?' })}
-    ${k.harKjeller === true ? `${uoppvarmetFelt}${oppvarmetFelt}${vektetNotis}
-      ${tallMedEnhet({ felt: 'klima.co2Kjeller', label: 'Hva er antatt kg CO₂-ekv./m² BTA for kjellerarealet i prosjektet?', enhet: CO2_ENHET, etter: co2Advarsel(pf, 'klima.co2Kjeller', grenseKjeller) })}` : ''}`;
+function kvBeregn(pf) {
+  const med = kvDeler(pf).filter(d => kvTall(d.bta) && eNum(d.bta) > 0);
+  const btaSmahus = med.filter(d => d.t.type === 'SMAHUS').reduce((s, d) => s + eNum(d.bta), 0);
+  const kat = type => (type === 'BLOKK' ? CO2_GRENSER.BOLIGBLOKK : btaSmahus >= 1000 ? CO2_GRENSER.SMAHUS_STOR : CO2_GRENSER.SMAHUS);
+  const rader = med.map(d => ({ ...d, grense: kat(d.t.type)[d.del], over: kvTall(d.co2) ? eNum(d.co2) > kat(d.t.type)[d.del] : null }));
+  const gruppe = liste => {
+    if (!liste.length) return null;
+    const bta = liste.reduce((s, d) => s + eNum(d.bta), 0);
+    const grense = liste.reduce((s, d) => s + eNum(d.bta) * d.grense, 0) / bta;
+    const utslipp = liste.every(d => kvTall(d.co2)) ? liste.reduce((s, d) => s + eNum(d.bta) * eNum(d.co2), 0) / bta : null;
+    return { bta, grense, utslipp, vektet: liste.length > 1, ok: utslipp == null ? null : utslipp <= grense };
+  };
+  return {
+    rader, totalBta: med.reduce((s, d) => s + eNum(d.bta), 0),
+    bygg: gruppe(rader.filter(d => d.del === 'bygg')), kjeller: gruppe(rader.filter(d => d.del !== 'bygg'))
+  };
 }
 
-/* Feltet for kjellerarealet vises bare for «Klimavennlig bolig» med kjeller */
-const visCo2Kjeller = pf => erKlimavennlig(pf) && (pf.klima || {}).harKjeller === true;
+/* Advarselen under et utslippsfelt. Den stopper ikke «Neste steg». Er
+   delen over grensen, men bygget eller kjelleren samlet innenfor, sier
+   den det, så man ikke tror at prosjektet ikke kvalifiserer. */
+function kvAdvarsel(r, t, del, felt) {
+  const rad = r.rader.find(d => d.t === t && d.del === del);
+  if (!rad || !rad.over) return '';
+  const g = del === 'bygg' ? r.bygg : r.kjeller;
+  const hva = del === 'bygg' ? 'bygget uten kjeller' : 'kjelleren';
+  const navn = `${t.flertall}, ${KV_DEL[del]}`;
+  const tekst = g && g.vektet && g.ok
+    ? `Klimagassavtrykket for ${navn} er høyere enn grenseverdien på ${rad.grense} ${CO2_ENHET}. Samlet for ${hva} er prosjektet likevel innenfor, se tabellen under.`
+    : `For å kvalifisere til dette lånet kan klimagassavtrykket for ${navn} ikke være høyere enn ${rad.grense} ${CO2_ENHET}.${g && g.vektet && g.ok === false ? ` Samlet for ${hva} er det ${fmtGrense(g.utslipp)}, mot grenseverdien ${fmtGrense(g.grense)}.` : ''}`;
+  return `<div class="e-feilmelding" id="${F.id(felt)}-advarsel">${E_IKON.feil}<span>${tekst}</span></div>`;
+}
+
+/* Tallfelt med enhet, som oppdaterer grenseverdiene mens man skriver */
+function kvTallFelt({ felt, label, enhet = 'm² BTA', etter = '' }) {
+  const id = F.id(felt);
+  return `<div class="e-felt${F.harFeil(felt) ? ' e-felt--feil' : ''}" data-feltboks="${felt}">
+    <label class="e-felt__label" for="${id}">${label}</label>
+    <div class="e-enhet"><input class="e-input e-input--s" id="${id}" inputmode="numeric" data-felt="${felt}" data-type="tekst" data-levende
+      value="${eEsc(F.hent(felt) ?? '')}" aria-describedby="${id}-feil${etter ? ` ${id}-advarsel` : ''}"><span class="e-enhet__tekst">${enhet}</span></div>
+    ${F.feilHtml(felt)}${etter}
+  </div>`;
+}
+
+/* Tabellen med grenseverdier, med linjene for bygg og kjeller under */
+function kvResultat(r) {
+  const status = ok => (ok == null ? '<span class="e-sekundaer">Mangler utslipp</span>'
+    : ok ? '<span class="kv-ok">✓ Innenfor</span>' : '<span class="kv-over">✗ Over grensen</span>');
+  if (!r.rader.length) return '<div class="kv-resultat"><h3 class="e-h4">Grenseverdier for prosjektet</h3><p class="e-sekundaer e-mb0">Fyll ut BTA for å se grenseverdiene.</p></div>';
+  const linje = (navn, g) => (g ? `<tr class="e-tabell__sum"><td>${navn}${g.vektet ? ', vektet' : ''}</td><td class="e-tall">${eTusen(g.bta)}</td>
+    <td class="e-tall">${g.utslipp == null ? '' : fmtGrense(g.utslipp)}</td><td class="e-tall">${fmtGrense(g.grense)}</td><td>${status(g.ok)}</td></tr>` : '');
+  return `<div class="kv-resultat" aria-live="polite">
+    <h3 class="e-h4">Grenseverdier for prosjektet</h3>
+    <div class="e-tabell-rulle"><table class="e-tabell">
+      <thead><tr><th>Del</th><th class="e-tall">m² BTA</th><th class="e-tall">Antatt</th><th class="e-tall">Grense</th><th><span class="e-sr">Status</span></th></tr></thead>
+      <tbody>${r.rader.map(d => `<tr${d.over ? ' class="kv-rad--over"' : ''}><td>${d.t.tittel}, ${KV_DEL[d.del]}</td><td class="e-tall">${eTusen(d.bta)}</td>
+        <td class="e-tall">${kvTall(d.co2) ? eEsc(d.co2) : ''}</td><td class="e-tall">${d.grense}</td><td>${status(d.over == null ? null : !d.over)}</td></tr>`).join('')}
+        ${linje('Bygg uten kjeller', r.bygg)}${linje('Kjeller', r.kjeller)}</tbody>
+    </table></div>
+    <p class="e-liten e-sekundaer e-mb0">Totalt BTA for prosjektet: ${eTusen(r.totalBta)} m². Utslipp og grenseverdier er i ${CO2_ENHET}.</p>
+  </div>`;
+}
+
+function blokkKlimaTyper(pf) {
+  const k = pf.klima || {};
+  const r = kvBeregn(pf);
+  return `<h2 class="e-h2 e-mt">Bygningstyper og klimagassavtrykk</h2>
+    ${F.avkryss({ felt: 'klima.typer', label: 'Hvilke bygningstyper skal prosjektet ha?', beskrivelse: 'Kryss av for alle som gjelder.',
+      valg: KV_TYPER.map(t => ({ v: t.type, l: t.type === 'BLOKK' ? 'Blokk' : 'Småhus', hjelp: t.hjelp })) })}
+    ${KV_TYPER.filter(t => (k.typer || []).includes(t.type)).map(t => {
+      const x = k[t.k] || {}; const q = `klima.${t.k}`;
+      const egne = r.rader.filter(d => d.t === t);
+      const par = (bta, co2, del, tittel) => `<h3 class="e-h4 e-mt">${tittel}</h3><div class="e-to">
+        ${kvTallFelt({ felt: `${q}.${bta}`, label: 'Samlet BTA' })}
+        ${kvTallFelt({ felt: `${q}.${co2}`, label: 'Antatt utslipp', enhet: CO2_ENHET, etter: kvAdvarsel(r, t, del, `${q}.${co2}`) })}</div>`;
+      return eKort({ tittel: t.tittel, kropp: `
+        <p>Oppgi tallene for alle ${t.flertall} i prosjektet til sammen, slik de står i klimagassbudsjettet.</p>
+        ${par('bta', 'co2', 'bygg', `Alle ${t.flertall}, uten kjeller`)}
+        ${F.radio({ felt: `${q}.kjeller`, label: `Har noen av ${t.flertall} kjeller?`, valg: KV_KJELLER })}
+        ${['OPP', 'BEGGE'].includes(x.kjeller) ? par('oppBta', 'oppCo2', 'oppvarmet', 'Oppvarmet kjeller, til sammen') : ''}
+        ${['UOPP', 'BEGGE'].includes(x.kjeller) ? par('uoppBta', 'uoppCo2', 'uoppvarmet', 'Uoppvarmet kjeller, til sammen') : ''}`,
+        bunn: egne.length ? `<span class="e-liten">Grenseverdier for ${t.flertall}: ${egne.map(d => `${KV_DEL[d.del]} <b>${d.grense}</b>`).join(' · ')}</span>` : '' });
+    }).join('')}
+    ${kvResultat(r)}`;
+}
 
 function blokkKlima(pf) {
   return `<div class="e-avsnitt">
     ${tallMedEnhet({ felt: 'klima.btaTotalt', label: 'Hva er totalt BTA på hele prosjektet?', enhet: 'm² BTA', hjelp: BTA_HJELP })}
     ${tallMedEnhet({ felt: 'klima.co2', label: 'Hva er antatt kg CO₂-ekv./m² BTA for prosjektet uten kjellerareal?', enhet: CO2_ENHET, etter: co2Advarsel(pf, 'klima.co2', co2GrenseBygg(pf)) })}
-    ${visCo2Kjeller(pf) ? tallMedEnhet({ felt: 'klima.co2Kjeller', label: 'Hva er antatt kg CO₂-ekv./m² BTA for kjellerarealet i prosjektet?', enhet: CO2_ENHET, etter: co2Advarsel(pf, 'klima.co2Kjeller', co2GrenseKjeller(pf)) }) : ''}
-    ${erKlimavennlig(pf) ? '' : F.janei({ felt: 'klima.oppvarmetKjeller', label: 'Vil kjelleren være oppvarmet?', rad: false })}
+    ${F.janei({ felt: 'klima.oppvarmetKjeller', label: 'Vil kjelleren være oppvarmet?', rad: false })}
   </div>`;
 }
 

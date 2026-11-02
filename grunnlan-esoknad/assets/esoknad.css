@@ -513,3 +513,11 @@ abbr[title="kroner"] { text-decoration: none; }
 .e-lesmer__knapp[aria-expanded="true"] svg { transform: rotate(180deg); }
 .e-lesmer__innhold { margin: var(--space-2) 0 0 var(--space-2); padding-left: var(--space-3); border-left: 3px solid rgb(229, 229, 229); }
 .e-lesmer__innhold > :last-child { margin-bottom: 0; }
+
+/* Grenseverdier for klimagassavtrykket på Bolig-steget (klimavennlig bolig) */
+.kv-resultat { background: var(--e-info); border-radius: var(--radius-md); padding: var(--space-4) var(--space-5); margin: var(--space-5) 0; }
+.kv-resultat .e-tabell { background: transparent; }
+.kv-resultat .e-tabell th, .kv-resultat .e-tabell td { padding: 6px 8px; }
+.kv-resultat tr.kv-rad--over td { background: var(--e-feil-bg); }
+.kv-ok { color: var(--hb-green-800); font-weight: 600; white-space: nowrap; }
+.kv-over { color: var(--e-feil); font-weight: 600; white-space: nowrap; }
