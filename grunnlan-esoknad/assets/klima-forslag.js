@@ -63,13 +63,13 @@ const kfStatus = (ok, kort = false) => (ok == null ? (kort ? '' : '<span class="
 function kfResultat(r, { tittel = 'Grenseverdier for prosjektet', kort = false } = {}) {
   if (!r.rader.length) return `<div class="kf-resultat"><h3 class="e-h4">${tittel}</h3><p class="e-sekundaer e-mb0">Fyll ut BTA for å se grenseverdiene.</p></div>`;
   const linje = (navn, g) => (g ? `<tr class="e-tabell__sum"><td>${navn}${g.vektet ? ', vektet' : ''}</td><td class="e-tall">${eTusen(g.bta)}</td>
-    <td class="e-tall">${g.utslipp == null ? '' : kfRund(g.utslipp)}</td><td class="e-tall">${kfRund(g.grense)}</td><td>${kfStatus(g.ok, kort)}</td></tr>` : '');
+    <td class="e-tall">${g.utslipp == null ? '' : kfRund(g.utslipp)}</td><td class="e-tall">${kfRund(g.grense)}</td><td class="e-tall">${kfStatus(g.ok, kort)}</td></tr>` : '');
   return `<div class="kf-resultat">
     <h3 class="e-h4">${tittel}</h3>
     <div class="e-tabell-rulle"><table class="e-tabell">
-      <thead><tr><th>Del</th><th class="e-tall">m² BTA</th><th class="e-tall">Antatt</th><th class="e-tall">Grense</th><th><span class="e-sr">Status</span></th></tr></thead>
+      <thead><tr><th>Del</th><th class="e-tall">m² BTA</th><th class="e-tall">Antatt</th><th class="e-tall">Grense</th><th class="e-tall">Status</th></tr></thead>
       <tbody>${r.rader.map(p => `<tr><td>${KF_TYPE[p.type]}, ${KF_DEL[p.del]}</td><td class="e-tall">${eTusen(p.bta)}</td>
-        <td class="e-tall">${kfTall(p.co2) ? eEsc(p.co2) : ''}</td><td class="e-tall">${p.grense}</td><td>${kfStatus(kfTall(p.co2) ? eNum(p.co2) <= p.grense : null, kort)}</td></tr>`).join('')}
+        <td class="e-tall">${kfTall(p.co2) ? eEsc(p.co2) : ''}</td><td class="e-tall">${p.grense}</td><td class="e-tall">${kfStatus(kfTall(p.co2) ? eNum(p.co2) <= p.grense : null, kort)}</td></tr>`).join('')}
         ${linje('Bygg uten kjeller', r.bygg)}${linje('Kjeller', r.kjeller)}</tbody>
     </table></div>
     <p class="e-liten e-sekundaer e-mb0">Totalt BTA: ${eTusen(r.totalBta)} m². Utslipp og grenseverdier er i ${KF_ENHET}.</p>
@@ -214,18 +214,18 @@ const KF3 = {
     return `<h2 class="e-h2">Klimagassavtrykk</h2>
       <p>Fyll ut radene som gjelder prosjektet, med tallene fra klimagassbudsjettet. Hver rad gjelder alle byggene av samme type til sammen. Har prosjektet tre blokker, legger du sammen BTA for alle tre. La radene som ikke gjelder stå tomme.</p>
       <div class="e-tabell-rulle"><table class="e-tabell">
-        <thead><tr><th>Bygningsdel</th><th>BTA (m²)</th><th>Antatt utslipp<br><span class="e-liten" style="font-weight:400">${KF_ENHET}</span></th><th class="e-tall">Grense</th><th><span class="e-sr">Status</span></th></tr></thead>
+        <thead><tr><th>Bygningsdel</th><th>BTA (m²)</th><th>Antatt utslipp<br><span class="e-liten" style="font-weight:400">${KF_ENHET}</span></th><th class="e-tall">Grense</th><th class="e-tall">Status</th></tr></thead>
         <tbody>${KF3_RADER.map((rad, i) => {
           const x = d[rad.k] || {};
           const beregnet = r.rader.find(y => y.type === rad.t.type && y.del === rad.del);
           const navn = `${rad.t.tittel}, ${KF_DEL[rad.del]}`;
           return `${i % 3 === 0 ? `<tr><th colspan="5" style="background:var(--e-gra)">${rad.t.tittel}, til sammen</th></tr>` : ''}
             <tr><td>${eStor(KF_DEL[rad.del])}</td>${celle(`${p}.${rad.k}.bta`, `BTA for ${navn}`)}${celle(`${p}.${rad.k}.co2`, `Antatt utslipp for ${navn}`)}
-            <td class="e-tall">${beregnet ? beregnet.grense : ''}</td><td>${beregnet && kfTall(x.co2) ? kfStatus(eNum(x.co2) <= beregnet.grense) : ''}</td></tr>`;
+            <td class="e-tall">${beregnet ? beregnet.grense : ''}</td><td class="e-tall">${beregnet && kfTall(x.co2) ? kfStatus(eNum(x.co2) <= beregnet.grense) : ''}</td></tr>`;
         }).join('')}</tbody>
         <tfoot>
-          ${r.bygg ? `<tr><td>Bygg uten kjeller${r.bygg.vektet ? ', vektet' : ''}</td><td>${eTusen(r.bygg.bta)}</td><td>${r.bygg.utslipp == null ? '' : kfRund(r.bygg.utslipp)}</td><td class="e-tall">${kfRund(r.bygg.grense)}</td><td>${kfStatus(r.bygg.ok)}</td></tr>` : ''}
-          ${r.kjeller ? `<tr><td>Kjeller${r.kjeller.vektet ? ', vektet' : ''}</td><td>${eTusen(r.kjeller.bta)}</td><td>${r.kjeller.utslipp == null ? '' : kfRund(r.kjeller.utslipp)}</td><td class="e-tall">${kfRund(r.kjeller.grense)}</td><td>${kfStatus(r.kjeller.ok)}</td></tr>` : ''}
+          ${r.bygg ? `<tr><td>Bygg uten kjeller${r.bygg.vektet ? ', vektet' : ''}</td><td>${eTusen(r.bygg.bta)}</td><td>${r.bygg.utslipp == null ? '' : kfRund(r.bygg.utslipp)}</td><td class="e-tall">${kfRund(r.bygg.grense)}</td><td class="e-tall">${kfStatus(r.bygg.ok)}</td></tr>` : ''}
+          ${r.kjeller ? `<tr><td>Kjeller${r.kjeller.vektet ? ', vektet' : ''}</td><td>${eTusen(r.kjeller.bta)}</td><td>${r.kjeller.utslipp == null ? '' : kfRund(r.kjeller.utslipp)}</td><td class="e-tall">${kfRund(r.kjeller.grense)}</td><td class="e-tall">${kfStatus(r.kjeller.ok)}</td></tr>` : ''}
         </tfoot>
       </table></div>
       ${F.gruppefeil(`${p}-tabell`)}
