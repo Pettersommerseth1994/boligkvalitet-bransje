@@ -480,7 +480,7 @@ function kvResultat(r) {
   return `<div class="kv-resultat" aria-live="polite">
     <h3 class="e-h4">Grenseverdier for prosjektet</h3>
     <div class="e-tabell-rulle"><table class="e-tabell">
-      <thead><tr><th>Del</th><th class="e-tall">m² BTA</th><th class="e-tall">Antatt</th><th class="e-tall">Grense</th><th><span class="e-sr">Status</span></th></tr></thead>
+      <thead><tr><th>Del</th><th class="e-tall">m² BTA</th><th class="e-tall">Antatt</th><th class="e-tall">Grense</th><th>Status</th></tr></thead>
       <tbody>${r.rader.map(d => `<tr${d.over ? ' class="kv-rad--over"' : ''}><td>${d.t.tittel}, ${KV_DEL[d.del]}</td><td class="e-tall">${eTusen(d.bta)}</td>
         <td class="e-tall">${kvTall(d.co2) ? eEsc(d.co2) : ''}</td><td class="e-tall">${d.grense}</td><td>${status(d.over == null ? null : !d.over)}</td></tr>`).join('')}
         ${linje('Bygg uten kjeller', r.bygg)}${linje('Kjeller', r.kjeller)}</tbody>
