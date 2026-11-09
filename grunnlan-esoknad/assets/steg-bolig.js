@@ -40,12 +40,13 @@ const LIVSLOP_HJELP = [
 ];
 
 const B = {
-  visBoliger: pf => (S.visBK(pf) ? (pf.boligkonfigurasjoner || []).some(k => !k.utenforKvalitetskriterier) : true),
-  visA: pf => S.visBK(pf) && !S.oppfOmb(pf),
-  visB: pf => B.visBoliger(pf) && !S.er(pf, 'KJOP', 'OPPFORING', 'OMBYGGING') && !S.boligsosialt(pf),
+  /* Ved oppgradering kommer boenhetene når søkeren har valgt hva oppgraderingen skal gi */
+  visBoliger: pf => (S.oppgPakker(pf) ? ogKlar(S.oppg(pf)) : S.visBK(pf) ? (pf.boligkonfigurasjoner || []).some(k => !k.utenforKvalitetskriterier) : true),
+  visA: pf => S.visBK(pf) && !S.oppfOmb(pf) && !S.oppgPakker(pf),
+  visB: pf => B.visBoliger(pf) && !S.er(pf, 'KJOP', 'OPPFORING', 'OMBYGGING') && !S.boligsosialt(pf) && !S.oppgPakker(pf),
   visC: pf => S.oppfOmb(pf) && S.visBK(pf),
   visD: pf => B.visBoliger(pf) || S.oppfOmb(pf),
-  visVelgBk: pf => S.visBK(pf) && !S.oppfOmb(pf),
+  visVelgBk: pf => S.visBK(pf) && !S.oppfOmb(pf) && !S.oppgPakker(pf),
   visLivslop: pf => S.visBK(pf) && S.oppfOmb(pf) && pf.livslopsboliger === true,
   livslopBk: pf => ['LIVSLOPSBOLIG_ALLE_KRAV', 'LIVSLOPSBOLIG_LOEFTEINNRETNING_FORBEREDT', 'Ingen boligkvalitet'].map(n => (pf.boligkonfigurasjoner || []).find(k => k.navn === n)),
   kvalitetsBk: pf => (pf.boligkonfigurasjoner || []).filter(k => !k.utenforKvalitetskriterier),
@@ -60,7 +61,8 @@ const B = {
   nesteNr: (pf, aid, etasje) => eTo(Math.max(0, ...S.boenheter(pf, aid).filter(f => f.etasje === etasje).map(f => Number(f.bruksenhetsNr) || 0)) + 1),
   nesteEtasje: (pf, aid, bokstav) => `${bokstav}${eTo(Math.max(0, ...S.boenheter(pf, aid).filter(f => f.etasje[0] === bokstav).map(f => Number(f.etasje.slice(1)))) + 1)}`,
   redigerer: null,
-  modal: null
+  modal: null,
+  meny: null
 };
 
 STEG.boligkvaliteter = {
@@ -71,10 +73,18 @@ STEG.boligkvaliteter = {
     S.alleValgteAdresser(pf).forEach(({ a }) => { if (a.fraMatrikkelen) S.lagMatrikkelBoenheter(pf, a); });
     if (S.er(pf, 'OPPFORING')) pf.boenheter.forEach(f => { f.enabled = true; });
     if (S.oppfOmb(pf) && !(pf.boligkonfigurasjoner || []).length) S.standardKonfigurasjoner(pf, S.t);
+    if (S.oppgPakker(pf)) { pf.oppg = pf.oppg || {}; if (!(pf.oppg.pakker || []).length) pf.oppg.pakker = [{ id: 1 }]; }
     B.redigerer = null;
+    B.meny = null;
   },
 
   vedEndring: (felt, pf) => {
+    /* Bytter man mellom tilgjengelighet og energi, passer ikke tiltakene i pakkene lenger */
+    if (felt === 'oppg.mal') (pf.oppg.pakker || []).forEach(x => { delete x.tiltak; delete x.varmepumpe; delete x.annet; });
+    const pt = /^oppg\.pakker\.(\d+)\.tiltak$/.exec(felt);
+    if (pt) { const x = pf.oppg.pakker[Number(pt[1])]; if (!(x.tiltak || []).includes('VARMEPUMPE')) delete x.varmepumpe; }
+    const pk = /^boenheter\.(\d+)\.pakke$/.exec(felt);
+    if (pk) pf.boenheter[Number(pk[1])].pakke = Number(pf.boenheter[Number(pk[1])].pakke);
     /* Uten kjeller er spørsmålene om kjellerarealet borte, og svarene tømmes */
     if (felt === 'klima.harKjeller' && pf.klima && pf.klima.harKjeller === false) {
       delete pf.klima.oppvarmetKjeller; delete pf.klima.co2Kjeller;
@@ -113,6 +123,7 @@ STEG.boligkvaliteter = {
         ${blokkKlimabudsjett(pf)}
         ${blokkKlimaTyper(pf)}` : ''}
       ${a ? blokkKvalitetskrav(pf) : ''}
+      ${S.oppgPakker(pf) ? blokkOppgradering(pf) : ''}
       ${B.visB(pf) ? blokkEnergikarakter(pf) : ''}
       ${c && !erKlimavennlig(pf) ? blokkKlima(pf) : ''}
       ${d ? S.alleValgteBygg(pf).map(({ e, b }) => `
@@ -120,13 +131,13 @@ STEG.boligkvaliteter = {
         ${S.valgteAdresser(b).map(adr => adresseBlokk(pf, e, b, adr)).join('')}`).join('') : ''}
       ${d && !S.alleValgteBygg(pf).length ? eCallout('advarsel', '<p>Du har ikke valgt noen adresser på Eiendom-steget ennå.</p>') : ''}
       ${F.gruppefeil('minstEnBoenhet')}
-      <h2 class="e-h2 e-mt">Antall boenheter i prosjektet</h2>
+      ${S.oppgPakker(pf) && !ogKlar(S.oppg(pf)) ? '' : `<h2 class="e-h2 e-mt">Antall boenheter i prosjektet</h2>
       <table class="e-tabell e-tabell--enkel" style="max-width:32rem"><tbody>
         ${S.boligsosialt(pf) || S.er(pf, 'OMBYGGING') ? '' : `
           <tr><td>Boenheter med i låneutmåling</td><td></td><td class="e-tall">${med}</td></tr>
           <tr><td>Boenheter ikke med i låneutmåling</td><td class="e-senter">+</td><td class="e-tall">${aktive.length - med}</td></tr>`}
         <tr class="e-tabell__sum"><td>Totalt antall boliger</td><td class="e-senter">=</td><td class="e-tall">${aktive.length || ''}</td></tr>
-      </tbody></table>
+      </tbody></table>`}
       ${F.sammendrag()}
       ${W.knapper()}
       ${B.modal ? kvalitetsmodal(pf) : ''}`;
@@ -136,6 +147,11 @@ STEG.boligkvaliteter = {
     const f = [];
     const feil = (nokkel, melding) => f.push({ nokkel, melding });
     if (B.visA(pf) && !B.kvalitetsBk(pf).length) feil('kvalitetskrav', 'Du mangler boligtype(r)');
+    if (S.oppgPakker(pf)) {
+      const o = S.oppg(pf);
+      f.push(...ogValgFeil(o, 'oppg'));
+      if (ogKlar(o)) f.push(...ogPakkeFeil(o, 'oppg'));
+    }
     if (B.visB(pf)) {
       if (!pf.energikarakterFor) feil('energikarakterFor', 'Du må legge inn energikarakter');
       if (!pf.energikarakterEtter) feil('energikarakterEtter', 'Du må legge inn energikarakter');
@@ -202,6 +218,7 @@ STEG.boligkvaliteter = {
         }
         tall('antallRom', 'antall rom', { maks: 9 });
         if (B.visVelgBk(pf) && !fo.bkId) feil(`${p}.bkId`, 'Du må velge boligtype.');
+        if (S.oppgPakker(pf) && !(pf.oppg.pakker || []).some(x => x.id === fo.pakke)) feil(`${p}.pakke`, `Du må velge oppgraderingspakke for ${fo.etasje}${fo.bruksenhetsNr}.`);
         if (S.salg(pf)) {
           if (V.tom(fo.salgspris)) feil(`${p}.salgspris`, 'Du må skrive salgspris.');
           else if (eNum(fo.salgspris) > 90000000) feil(`${p}.salgspris`, 'Salgspris kan ikke være større enn 90000000.');
@@ -241,6 +258,29 @@ STEG.boligkvaliteter = {
       return true;
     },
     modalLukk: () => { B.modal = null; },
+
+    ogLeggPakke: (d, pf) => { pf.oppg.pakker.push({ id: Math.max(...pf.oppg.pakker.map(x => x.id)) + 1 }); },
+    ogSlettPakke: async (d, pf) => {
+      const j = Number(d.j);
+      const ok = await eBekreft({ tittel: 'Bekreft sletting', tekst: `Er du sikker på at du vil slette <b>pakke ${j + 1}</b>? Boenhetene som har pakken, må få en ny.`, bekreft: 'Slett', destruktiv: true });
+      if (!ok) return false;
+      const [x] = pf.oppg.pakker.splice(j, 1);
+      pf.boenheter.forEach(fo => { if (fo.pakke === x.id) delete fo.pakke; });
+      return true;
+    },
+    /* Gir alle avkryssede boenheter på adressen den valgte pakken */
+    ogBrukPakke: (d, pf) => {
+      const aid = Number(d.aid);
+      const id = Number((pf.massePakke || {})[`a${aid}`]);
+      if (!id) return false;
+      S.boenheter(pf, aid).filter(fo => fo.enabled).forEach(fo => { fo.pakke = id; });
+      delete pf.massePakke[`a${aid}`];
+      return true;
+    },
+    ogMeny: d => {
+      B.meny = B.meny === Number(d.id) ? null : Number(d.id);
+      if (B.meny) setTimeout(plasserMeny, 0);
+    },
 
     leggTilEtasje: (d, pf) => {
       const aid = Number(d.aid);
@@ -285,14 +325,17 @@ STEG.boligkvaliteter = {
       return true;
     },
     leggTilBoenhet: (d, pf) => {
+      B.meny = null;
       const fo = pf.boenheter.find(f => f.id === Number(d.id));
       pf.boenheter.push({ id: S.nyId(), adresseId: fo.adresseId, etasje: fo.etasje, bruksenhetsNr: B.nesteNr(pf, fo.adresseId, fo.etasje), enabled: true, fraMatrikkelen: false });
     },
     kopierBoenhet: (d, pf) => {
+      B.meny = null;
       const fo = pf.boenheter.find(f => f.id === Number(d.id));
       pf.boenheter.push({ ...fo, id: S.nyId(), bruksenhetsNr: B.nesteNr(pf, fo.adresseId, fo.etasje), fraMatrikkelen: false, boligbetegnelse: undefined });
     },
     slettBoenhet: async (d, pf) => {
+      B.meny = null;
       const fo = pf.boenheter.find(f => f.id === Number(d.id));
       const ok = await eBekreft({ tittel: 'Bekreft sletting', tekst: `Er du sikker på at du vil slette <b>${fo.etasje}${fo.bruksenhetsNr}</b>?`, bekreft: 'Slett', destruktiv: true });
       if (!ok) return false;
@@ -322,6 +365,16 @@ function blokkKvalitetskrav(pf) {
     </table></div>` : ''}
     ${F.feilHtml('kvalitetskrav')}
   </div>`;
+}
+
+/* Oppgradering: hva den skal gi, og pakkene med energikarakter og tiltak */
+function blokkOppgradering(pf) {
+  const o = pf.oppg;
+  return `${ogValg(o, 'oppg')}
+    ${ogKlar(o) ? `<h2 class="e-h2 e-mt">Oppgraderingspakker</h2>
+      <p>Lag én pakke for hver måte boligene skal oppgraderes på. Er alle like, holder det med én. Etterpå velger du pakke for hver boenhet i tabellene under.</p>
+      ${ogPakkeKort(o, 'oppg', F.visFeil)}
+      <p><button type="button" class="e-knapp" data-handling="ogLeggPakke">${E_IKON.pluss}Legg til pakke</button></p>` : ''}`;
 }
 
 function blokkEnergikarakter(pf) {
@@ -533,6 +586,16 @@ function adresseBlokk(pf, e, b, a) {
         <option value="" disabled selected>Velg boligkvalitet...</option>
         ${(pf.boligkonfigurasjoner || []).map(k => `<option value="${k.id}">${eEsc(k.navn)}</option>`).join('')}
       </select></div>` : ''}
+    ${S.oppgPakker(pf) ? (() => {
+      const n = rader.filter(f => f.enabled).length;
+      const v = (pf.massePakke || {})[`a${a.id}`];
+      return `<div class="og-adressevalg"><div class="e-felt"><label class="e-felt__label" for="${F.id(`massePakke.a${a.id}`)}">Gi de avkryssede boenhetene på adressen</label>
+        <select class="e-select og-sel og-sel--bred" id="${F.id(`massePakke.a${a.id}`)}" data-felt="massePakke.a${a.id}" data-type="velg">
+          <option value="" disabled ${v ? '' : 'selected'}>Velg pakke</option>
+          ${pf.oppg.pakker.map((x, j) => `<option value="${x.id}" ${String(v) === String(x.id) ? 'selected' : ''}>Pakke ${j + 1}</option>`).join('')}
+        </select></div>
+        <button type="button" class="e-knapp" data-handling="ogBrukPakke" data-aid="${a.id}" ${n ? '' : 'disabled'}>Bruk på avkryssede (${n})</button></div>`;
+    })() : ''}
     ${F.visFeil && !rader.some(f => f.enabled) ? eCallout('feil', '<p>Du må velge minst en bolig for denne adressen eller fjerne den.</p>') : ''}
     ${F.gruppefeil(`adresse-${a.id}`)}
     ${etasjer.map(et => etasjeBlokk(pf, b, a, et, kanLegge)).join('')}
@@ -566,6 +629,7 @@ function etasjeBlokk(pf, b, a, etasje, kanLegge) {
     S.visPrimaer(pf) && { h: 'P-rom', felt: 'primaerAreal', type: 'tekst', bredde: 'xs' },
     { h: 'Antall rom', felt: 'antallRom', type: 'tekst', bredde: 'xs' },
     B.visVelgBk(pf) && { h: 'Velg boligkvalitet', felt: 'bkId', type: 'bk' },
+    S.oppgPakker(pf) && { h: 'Oppgraderingspakke', felt: 'pakke', type: 'pakke' },
     S.salg(pf) && { h: 'Salgspris', felt: 'salgspris', type: 'belop' },
     S.utleie(pf) && { h: 'Husleie', felt: 'utleiepris', type: 'belop' }
   ].filter(Boolean);
@@ -580,6 +644,16 @@ function etasjeBlokk(pf, b, a, etasje, kanLegge) {
       inp = `<select class="e-select${feilKl}" id="${F.id(p)}" data-felt="${p}" data-type="velg" ${av} aria-label="Velg boligkvalitet for ${fo.etasje}${fo.bruksenhetsNr}">
         <option value="" disabled ${fo.bkId ? '' : 'selected'}>Velg boligkvalitet...</option>
         ${(pf.boligkonfigurasjoner || []).map(x => `<option value="${x.id}" ${fo.bkId === x.id ? 'selected' : ''}>${eEsc(x.navn)}</option>`).join('')}</select>`;
+    } else if (k.type === 'pakke') {
+      const o = pf.oppg;
+      const x = o.pakker.find(y => y.id === fo.pakke);
+      inp = `<div class="og-pakkecelle"><select class="e-select og-sel og-sel--bred${feilKl}" id="${F.id(p)}" data-felt="${p}" data-type="velg" ${av} aria-label="Oppgraderingspakke for ${fo.etasje}${fo.bruksenhetsNr}">
+        <option value="" disabled ${x ? '' : 'selected'}>Velg pakke</option>
+        ${o.pakker.map((y, j) => `<option value="${y.id}" ${x === y ? 'selected' : ''}>Pakke ${j + 1}</option>`).join('')}</select>
+        ${x && fo.enabled ? (() => {
+    const n = (x.tiltak || []).length;
+    return `<span class="e-liten e-sekundaer">${ogKarakter(o) && x.fore && x.etter ? `${x.fore} → ${x.etter} · ` : ''}${n} tiltak</span>`;
+  })() : ''}</div>`;
     } else if (k.type === 'belop') {
       inp = `<div class="e-belop">${F.belopInput({ felt: p, label: `${k.h} for ${fo.etasje}${fo.bruksenhetsNr}` }).replace('<input', `<input ${av}`)}</div>`;
     } else {
@@ -596,7 +670,8 @@ function etasjeBlokk(pf, b, a, etasje, kanLegge) {
       ? `<td>${varsel ? `<span style="color:var(--e-advarsel-kant)">${F.hjelpKnapp(`varsel-${fo.id}`, 'Vis merknad')}</span>` : ''}<span class="e-sr">${fo.etasje}${fo.bruksenhetsNr}</span></td>`
       : `<td><label class="e-valg" style="padding:0"><input type="checkbox" id="${F.id(`boenheter.${i}.enabled`)}" data-felt="boenheter.${i}.enabled" data-type="sjekk" ${fo.enabled ? 'checked' : ''}><span>${fo.etasje}${fo.bruksenhetsNr}</span></label></td>`;
     const livCeller = livKol.map((l, j) => `<td class="e-senter"><input type="radio" name="${F.id(`liv-${fo.id}`)}" id="${F.id(`liv-${fo.id}-${j}`)}" value="${livBk[j] ? livBk[j].id : ''}" data-felt="boenheter.${i}.bkId" data-type="radio" ${livBk[j] && fo.bkId === livBk[j].id ? 'checked' : ''} aria-label="${l} for ${fo.etasje}${fo.bruksenhetsNr}" style="width:20px;height:20px;accent-color:var(--e-knapp)"></td>`).join('');
-    const handling = kanRedigere ? `<td class="e-tabell__handling">
+    const handling = kanRedigere && S.oppgPakker(pf) ? `<td class="e-tabell__handling">${radMeny(fo, kanLegge)}</td>`
+      : kanRedigere ? `<td class="e-tabell__handling">
       <button type="button" class="e-knapp e-knapp--ikon" data-handling="leggTilBoenhet" data-id="${fo.id}" title="Legg til boenhet" aria-label="Legg til boenhet" ${kanLegge ? '' : 'disabled'}>${E_IKON.pluss}</button>
       <button type="button" class="e-knapp e-knapp--ikon" data-handling="kopierBoenhet" data-id="${fo.id}" title="Kopier bolignummer ${fo.bruksenhetsNr}" aria-label="Kopier bolignummer ${fo.bruksenhetsNr}" ${kanLegge ? '' : 'disabled'}>${E_IKON.kopier}</button>
       <button type="button" class="e-knapp e-knapp--ikon e-knapp--subtil-destruktiv" data-handling="slettBoenhet" data-id="${fo.id}" title="Slett bolignummer ${fo.bruksenhetsNr}" aria-label="Slett bolignummer ${fo.bruksenhetsNr}">${E_IKON.soppel}</button></td>` : '';
@@ -635,6 +710,43 @@ function etasjeBlokk(pf, b, a, etasje, kanLegge) {
     ${maksNaadd ? eCallout('advarsel', '<p>Du kan ikke legge til flere boenheter på denne boligtypen.</p>') : ''}
   </div>`;
 }
+
+/* Legg til, Dupliser og Slett bak tre prikker */
+function radMeny(fo, kanLegge) {
+  const navn = `${fo.etasje}${fo.bruksenhetsNr}`;
+  const apen = B.meny === fo.id;
+  return `<div class="og-meny-boks">
+    <button type="button" class="e-knapp e-knapp--ikon og-prikker" data-handling="ogMeny" data-id="${fo.id}" aria-haspopup="menu" aria-expanded="${apen}" aria-label="Flere valg for ${navn}">⋯</button>
+    ${apen ? `<div class="og-meny" role="menu" aria-label="Valg for ${navn}">
+      <button type="button" role="menuitem" class="og-meny__valg" data-handling="leggTilBoenhet" data-id="${fo.id}" ${kanLegge ? '' : 'disabled'}>${E_IKON.pluss}Legg til</button>
+      <button type="button" role="menuitem" class="og-meny__valg" data-handling="kopierBoenhet" data-id="${fo.id}" ${kanLegge ? '' : 'disabled'}>${E_IKON.kopier}Dupliser</button>
+      <button type="button" role="menuitem" class="og-meny__valg og-meny__valg--slett" data-handling="slettBoenhet" data-id="${fo.id}">${E_IKON.soppel}Slett</button>
+    </div>` : ''}
+  </div>`;
+}
+
+/* Tabellen kan rulle sidelengs og ville klippet menyen. Den legges
+   derfor fast i vinduet, under knappen, eller over når det er trangt. */
+function plasserMeny() {
+  const knapp = document.querySelector(`[data-handling="ogMeny"][data-id="${B.meny}"]`);
+  const meny = knapp && knapp.parentElement.querySelector('.og-meny');
+  if (!meny) return;
+  const r = knapp.getBoundingClientRect();
+  const over = r.bottom + meny.offsetHeight + 8 > innerHeight;
+  Object.assign(meny.style, { position: 'fixed', right: 'auto', left: `${Math.max(8, r.right - meny.offsetWidth)}px`,
+    top: `${over ? r.top - meny.offsetHeight - 4 : r.bottom + 4}px` });
+}
+
+/* Menyen følger knappen når siden eller tabellen ruller, og lukkes ved klikk utenfor og med Escape */
+addEventListener('scroll', () => { if (B.meny) plasserMeny(); }, { passive: true, capture: true });
+document.addEventListener('click', e => {
+  if (B.meny && !e.target.closest('.og-meny-boks')) { B.meny = null; F.tegn(); }
+});
+document.addEventListener('keydown', e => {
+  if (e.key !== 'Escape' || !B.meny) return;
+  const id = B.meny; B.meny = null; F.tegn();
+  document.querySelector(`[data-handling="ogMeny"][data-id="${id}"]`)?.focus();
+});
 
 function kvalitetsmodal() {
   const m = B.modal;

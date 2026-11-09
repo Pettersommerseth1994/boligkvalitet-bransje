@@ -14,6 +14,8 @@ const OK = {
       { felt: 'omkostninger', l: 'Omkostninger', navn: 'omkostninger', tegn: '+', paakrevd: true, hjelp: 'Du må dokumentere kjøpesum og omkostninger med signert kjøpekontrakt.',
         vis: p('KJOP') || (tu && (S.er(pf, 'KJOP') || (S.er(pf, 'OMBYGGING') && pf.kjop === true))) },
       { felt: 'oppgraderingsKostnad', l: 'Oppgraderingskostnader', navn: 'oppgraderingskostnader', tegn: '', paakrevd: true, hjelp: 'Du må dokumentere kostnader med signert pristilbud/anbud.', vis: p('OPPGRADERING') },
+      { felt: 'energiradgiverKostnad', l: 'Kostnader til energirådgiver', navn: 'kostnader til energirådgiver', tegn: '+', paakrevd: false, hjelp: 'Vi anbefaler å bruke en energirådgiver når boligene skal bli mer energieffektive. Kostnadene kan tas med i prosjektkostnadene.',
+        vis: p('OPPGRADERING') && S.oppg(pf).mal === 'ENERGI' },
       { felt: 'ombyggingsKostnad', l: 'Ombyggingskostnader', navn: 'ombyggingskostnader', tegn: '', paakrevd: true, hjelp: 'Du må dokumentere kostnader med signert pristilbud/anbud.', vis: p('OMBYGGING') || (tu && S.er(pf, 'OMBYGGING')) },
       { felt: 'byggekostnader', l: 'Byggekostnader', navn: 'byggekostnader', tegn: '', paakrevd: true, hjelp: 'Alle kostnader i prosjektet inkludert byggelånsrente som ikke knyttes til kjøp og klargjøring av tomt.', vis: p('OPPFORING') || (tu && S.er(pf, 'OPPFORING')) },
       { felt: 'tomtekostnader', l: 'Tomtekostnader', navn: 'tomtekostnader', tegn: '+', paakrevd: true, hjelp: 'Alle kostnader knyttet til kjøp og klargjøring av tomt inn til byggegrube.', vis: p('OPPFORING') || (tu && S.er(pf, 'OPPFORING')) },

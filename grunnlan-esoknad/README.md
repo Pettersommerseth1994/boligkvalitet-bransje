@@ -40,7 +40,7 @@ annen låntaker og tilskudd til utleieboliger virker som i dag.
 | `soknad.html` | Veiviseren: Prosjekt → Eiendom → Bolig → Økonomi → Vedlegg → Kundeopplysninger → Oppsummering. |
 | `kvittering.html` | «Søknaden er sendt til signering». |
 | `klima-forslag.html` | Fem forslag til klimagassavtrykket på Bolig-steget, etter Miro-skissen. Forslag 2 er valgt og ligger nå i søknaden. |
-| `oppgradering-forslag.html` | Fem forslag til Bolig-steget ved oppgradering, uten modalen med boligkvaliteter: velg tilgjengelighet eller energi først, så masseredigering av boenhetene. |
+| `oppgradering-forslag.html` | Fem forslag til Bolig-steget ved oppgradering, uten modalen med boligkvaliteter: velg tilgjengelighet eller energi først, så masseredigering av boenhetene. Forslag 4, oppgraderingspakker, er valgt og ligger nå i søknaden. |
 | `endre-lantaker.html`, `igangsettelse.html`, `utsett-oppstart.html` | Valgene på en søknad som er innvilget. |
 
 To eksempelsøknader ligger klare første gang: en påbegynt, som også viser
@@ -58,6 +58,7 @@ nynorsk, utlogging og automatisk utlogging etter 28 minutter.
 | `assets/felles.js` | Testdata (foretak, kommuner, Matrikkelen), lagring, header, footer og dialoger. |
 | `assets/felt.js` | Skjemamotoren: feltene, feilmeldingene og tegningen av siden. |
 | `assets/soknad.js` | Søknaden: regler, beregninger, vedleggskrav og eksempelsøknadene. |
+| `assets/oppgradering.js`, `assets/oppgradering.css` | Oppgradering: tiltakene, reglene for energikarakter og oppgraderingspakkene. Brukes på Bolig-steget og på forslagssiden. |
 | `assets/steg-bolig.js` | Bolig-steget. Her står også grenseverdiene for klimagassutslipp (`CO2_GRENSER`) og regelen for hvilken kategori et prosjekt får. |
 | `assets/sider.js` | Sidene utenfor veiviseren. |
 | `assets/wizard.js` | Veiviseren: stepper, knapperad og navigasjon. |

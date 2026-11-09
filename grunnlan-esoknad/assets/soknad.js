@@ -37,6 +37,10 @@ S.boligsosialt = pf => S.harAvtale(pf);
 S.visKlima = pf => S.oppfOmb(pf) && S.visBK(pf);
 /* Oppføring med formålet «Klimavennlig bolig», valgt på «Opprett søknad» */
 S.erKlimavennlig = pf => S.er(pf, 'OPPFORING') && pf.laneformal === 'KLIMAVENNLIG';
+/* Oppgradering: oppgraderingspakker på Bolig-steget i stedet for boligkvaliteter i en modal */
+S.oppgPakker = pf => S.er(pf, 'OPPGRADERING') && S.visBK(pf);
+S.oppg = pf => pf.oppg || {};
+S.oppgVei = pf => (S.oppgPakker(pf) && S.oppg(pf).mal === 'ENERGI' ? S.oppg(pf).energivei : null);
 S.visPrimaer = pf => S.produkt(pf, 'TILSKUDDUTLEIE');
 S.virkemidler = pf => [S.lanProdukt(pf) && 'GRUNNLAN', S.produkt(pf, 'TILSKUDDUTLEIE') && 'TILSKUDDUTLEIE'].filter(Boolean);
 S.lantakerOrg = pf => (pf.sokerErLantaker !== false ? pf.soker : pf.lantaker) || null;
@@ -153,7 +157,7 @@ S.lagMatrikkelBoenheter = (pf, a) => {
 S.okonomi = pf => pf.okonomi || (pf.okonomi = {});
 S.sumProsjektkostnader = pf => {
   const o = S.okonomi(pf);
-  return ['kjopesum', 'omkostninger', 'utbedringskostnader', 'ombyggingsKostnad', 'oppgraderingsKostnad', 'byggekostnader', 'tomtekostnader']
+  return ['kjopesum', 'omkostninger', 'utbedringskostnader', 'ombyggingsKostnad', 'oppgraderingsKostnad', 'energiradgiverKostnad', 'byggekostnader', 'tomtekostnader']
     .reduce((s, k) => s + eNum(o[k]), 0);
 };
 S.sumSalgspris = pf => S.aktiveBoenheter(pf).reduce((s, f) => s + eNum(f.salgspris), 0);
@@ -198,6 +202,10 @@ S.VEDLEGG = [
   { id: 'TAKST_VEDLEGG', tittel: 'Takst med verdivurdering fra autorisert takstmann', hjelp: 'Gjerne en e-takst. Dersom det ikke er mulig å innhente e-takst, kan det i stedet vedlegges en verditakst eller en annen verdivurdering. Både e-takst, verditakst og andre verdivurderinger må være utarbeidet av en nøytral takstmann eller eiendomsmegler, og bygge både på statistiske data og befaring.', regel: pf => !S.salg(pf) },
   { id: 'ENOVABEREGNING_VEDLEGG', tittel: 'Varmetapsberegning for Enovas krav til oppgradering', hjelp: 'Enten energiattest fra Enovamodulen i Energimerkesystemet eller energiberegning utført av kvalifisert energirådgiver.',
     regel: pf => (pf.boligkonfigurasjoner || []).some(k => (k.koder || []).includes('ENOVAS_OPPGRADERING')) },
+  { id: 'ENERGIATTEST_VEDLEGG', tittel: 'Energiattest for boligene', hjelp: 'Energiattesten viser energikarakteren før oppgraderingen. Har en energirådgiver eller Enovas kalkulatorer beregnet karakteren etter oppgraderingen, legger dere det ved her også.',
+    regel: pf => S.oppgVei(pf) === 'KARAKTER' },
+  { id: 'ENERGIRADGIVER_VEDLEGG', tittel: 'Uttalelse fra energirådgiver', hjelp: 'Uttalelsen skal vise hvor stor energibesparelse oppgraderingen gir, i prosent.', regel: pf => S.oppgVei(pf) === 'PROSENT' },
+  { id: 'EFFEKTREGNSKAP_VEDLEGG', tittel: 'Effektregnskap etter NS 3031:2025', regel: pf => S.oppgVei(pf) === 'PROSENT' },
   { id: 'UNDERLEVERANDORER_MAKS_TO_LEDD_VEDLEGG', tittel: 'Dokumentasjon av maksimalt to underledd i leverandørkjeden', regel: pf => !S.er(pf, 'KJOP'),
     hjelp: `<p>Når det søkes om lån til finansiering av bygge- og anleggsarbeider, krever Husbanken at hovedleverandøren maksimalt har to ledd under seg i leverandørkjeden. Bestemmelsen gjelder bare selve utførelsen av bygge- og anleggsarbeider og ikke det som knytter seg til planlegging/prosjektering, rådgivning m.m. Bestemmelsen omfatter ikke vareleverandører eller sidestilte underleverandører som har direkte kontrakt med hovedleverandøren.</p>
       <p>I vedlegget skal det fremgå navn, organisasjonsnummer, kontaktperson og kontaktinformasjon til underleverandørene.</p>

@@ -185,7 +185,7 @@ function kortBoenheter(pf) {
           ${prim ? `<td class="e-tall">${eEsc(fo.primaerAreal || '')} m²</td>` : ''}
           <td class="e-tall">${eEsc(fo.antallRom || '')} stk</td>
           ${liv ? livBk.map(k => `<td class="e-senter">${k && fo.bkId === k.id ? '✓' : ''}</td>`).join('') : ''}
-          ${!a && S.visBK(pf) ? `<td>${eEsc((bk(fo) || {}).navn || '')}</td>` : ''}
+          ${S.oppgPakker(pf) ? `<td>${pf.oppg.pakker.some(x => x.id === fo.pakke) ? ogPakkeNavn(pf.oppg, fo.pakke) : ''}</td>` : !a && S.visBK(pf) ? `<td>${eEsc((bk(fo) || {}).navn || '')}</td>` : ''}
           ${S.utleie(pf) ? `<td class="e-tall">${eKr(fo.utleiepris)}</td>` : ''}
           ${S.salg(pf) ? `<td class="e-tall">${eKr(fo.salgspris)}</td>` : ''}
         </tr>`).join('')}`;
@@ -195,7 +195,7 @@ function kortBoenheter(pf) {
         ${liv ? `<tr><th colspan="${prim ? 6 : 5}" style="border:0"></th><th colspan="3" class="e-senter">Livsløp</th><th style="border:0"></th></tr>` : ''}
         <tr><th>Adresse</th><th>${a ? 'Bolignr.' : 'Bolignummer'}</th>${a ? '<th>Utbyggers boligbetegnelse</th>' : ''}<th class="e-tall">BRA-i</th>${prim ? '<th class="e-tall">Primærareal</th>' : ''}<th class="e-tall">Antall rom</th>
           ${liv ? '<th class="e-senter">Oppfyller alle krav til livsløpsboliger</th><th class="e-senter">Forberedt for innvendig løfteinnretning</th><th class="e-senter">Oppfyller ikke krav</th>' : ''}
-          ${!a && S.visBK(pf) ? '<th>Boligkvaliteter</th>' : ''}${S.utleie(pf) ? '<th class="e-tall">Husleie</th>' : ''}${S.salg(pf) ? '<th class="e-tall">Salgspris</th>' : ''}</tr>
+          ${S.oppgPakker(pf) ? '<th>Oppgraderingspakke</th>' : !a && S.visBK(pf) ? '<th>Boligkvaliteter</th>' : ''}${S.utleie(pf) ? '<th class="e-tall">Husleie</th>' : ''}${S.salg(pf) ? '<th class="e-tall">Salgspris</th>' : ''}</tr>
       </thead><tbody>${rader}</tbody></table></div>`;
   }).join('');
   const sum = k => alle.reduce((s, x) => s + eNum(x.fo[k]), 0);
@@ -213,8 +213,17 @@ function kortBoenheter(pf) {
   const kvalitetskrav = !a && S.visBK(pf) && B.kvalitetsBk(pf).length ? `<h3 class="e-h3">Kvalitetskrav</h3>
     <table class="e-tabell" style="margin-bottom:var(--space-5)"><thead><tr><th>Navn</th><th>Energi og Miljø</th><th>Universell utforming</th></tr></thead><tbody>
     ${B.kvalitetsBk(pf).map(k => `<tr><td>${eEsc(k.navn)}</td><td>${k.koder.map(kvalitet).filter(x => x && x.kat === 'EM').map(x => x.navn).join(', ')}</td><td>${k.koder.map(kvalitet).filter(x => x && x.kat === 'UU').map(x => x.navn).join(', ')}</td></tr>`).join('')}</tbody></table>` : '';
-  return OP.kort(pf, { tittel: S.visBK(pf) ? 'Kvalitetskrav og boenheter' : 'Boenheter', ikon: 'husStor', steg: 'boligkvaliteter', kropp: `
-    ${miljo}${kvalitetskrav}${tabeller || '<p>Ingen boenheter er lagt til.</p>'}
+  const o = S.oppg(pf);
+  const oppgradering = S.oppgPakker(pf) ? `<dl class="e-dl">
+      ${OP.rad('Hva skal oppgraderingen gi?', { TILGJ: 'Bedre tilgjengelighet', ENERGI: 'Mer energieffektive boliger' }[o.mal])}
+      ${ogEnergi(o) ? OP.rad('Hvordan vises det?', { KARAKTER: 'Med forbedret energikarakter', PROSENT: 'Med energieffektivisering på minst 30 prosent' }[o.energivei]) : ''}
+      ${ogEnergi(o) && o.energivei === 'PROSENT' ? OP.rad('Forventet energibesparelse', o.besparelse ? `${eEsc(o.besparelse)} prosent` : null) : ''}</dl>
+    ${ogKlar(o) ? `<h3 class="e-h3">Oppgraderingspakker</h3>
+      <div class="e-tabell-rulle"><table class="e-tabell" style="margin-bottom:var(--space-5)"><thead><tr><th>Pakke</th>${ogKarakter(o) ? '<th>Energikarakter</th>' : ''}<th>Tiltak</th><th class="e-tall">Boenheter</th></tr></thead><tbody>
+      ${(o.pakker || []).map((x, j) => `<tr><td>Pakke ${j + 1}</td>${ogKarakter(o) ? `<td>${x.fore && x.etter ? `${x.fore} → ${x.etter}` : ''}</td>` : ''}<td>${ogTiltakTekst(o, x)}</td>
+        <td class="e-tall">${S.aktiveBoenheter(pf).filter(fo => fo.pakke === x.id).length}</td></tr>`).join('')}</tbody></table></div>` : ''}` : '';
+  return OP.kort(pf, { tittel: S.oppgPakker(pf) ? 'Oppgradering og boenheter' : S.visBK(pf) ? 'Kvalitetskrav og boenheter' : 'Boenheter', ikon: 'husStor', steg: 'boligkvaliteter', kropp: `
+    ${miljo}${oppgradering}${kvalitetskrav}${tabeller || '<p>Ingen boenheter er lagt til.</p>'}
     <table class="e-tabell e-tabell--enkel" style="max-width:36rem">
       ${S.er(pf, 'OPPFORING') ? `<tr><td>Med i låneutmåling</td><td class="e-tall">${med} stk</td></tr><tr><td>Ikke med i låneutmåling</td><td class="e-tall">${alle.length - med} stk</td></tr>` : ''}
       <tr class="e-tabell__sum"><td>Totalt</td><td class="e-tall">${alle.length} stk</td><td class="e-tall">${sum('bruksAreal')} m²</td>
