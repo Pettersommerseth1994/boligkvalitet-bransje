@@ -489,7 +489,7 @@ function kvResultat(r) {
   return `<div class="kv-resultat" aria-live="polite">
     <h3 class="e-h4">Grenseverdier for prosjektet</h3>
     <div class="e-tabell-rulle"><table class="e-tabell">
-      <thead><tr><th>Del</th><th class="e-tall">m² BTA</th><th class="e-tall">Antatt</th><th class="e-tall">Grense</th><th class="e-tall">Status</th></tr></thead>
+      <thead><tr><th>Del</th><th class="e-tall">m² BTA</th><th class="e-tall" data-endret="12">Antatt utslipp</th><th class="e-tall">Grenseverdi</th><th class="e-tall">Status</th></tr></thead>
       <tbody>${r.rader.map(d => `<tr${d.over ? ' class="kv-rad--over"' : ''}><td>${d.t.tittel}, ${KV_DEL[d.del]}</td><td class="e-tall">${eTusen(d.bta)}</td>
         <td class="e-tall">${kvTall(d.co2) ? eEsc(d.co2) : ''}</td><td class="e-tall">${d.grense}</td><td class="e-tall">${status(d.over == null ? null : !d.over)}</td></tr>`).join('')}
         ${linje('Bygg uten kjeller', r.bygg)}${linje('Kjeller', r.kjeller)}</tbody>
@@ -618,11 +618,7 @@ function etasjeBlokk(pf, b, a, etasje, kanLegge) {
       ? `<td>${varsel ? `<span style="color:var(--e-advarsel-kant)">${F.hjelpKnapp(`varsel-${fo.id}`, 'Vis merknad om arealgrensen', 'i', ' data-endret="10"')}</span>` : ''}<span class="e-sr">${fo.etasje}${fo.bruksenhetsNr}</span></td>`
       : `<td><label class="e-valg" style="padding:0"><input type="checkbox" id="${F.id(`boenheter.${i}.enabled`)}" data-felt="boenheter.${i}.enabled" data-type="sjekk" ${fo.enabled ? 'checked' : ''}><span>${fo.etasje}${fo.bruksenhetsNr}</span></label></td>`;
     const livCeller = livKol.map((l, j) => `<td class="e-senter"><input type="radio" name="${F.id(`liv-${fo.id}`)}" id="${F.id(`liv-${fo.id}-${j}`)}" value="${livBk[j] ? livBk[j].id : ''}" data-felt="boenheter.${i}.bkId" data-type="radio" ${livBk[j] && fo.bkId === livBk[j].id ? 'checked' : ''} aria-label="${l} for ${fo.etasje}${fo.bruksenhetsNr}" style="width:20px;height:20px;accent-color:var(--e-knapp)"></td>`).join('');
-    const handling = kanRedigere && S.oppgPakker(pf) ? `<td class="e-tabell__handling">${radMeny(fo, kanLegge)}</td>`
-      : kanRedigere ? `<td class="e-tabell__handling">
-      <button type="button" class="e-knapp e-knapp--ikon" data-handling="leggTilBoenhet" data-id="${fo.id}" title="Legg til boenhet" aria-label="Legg til boenhet" ${kanLegge ? '' : 'disabled'}>${E_IKON.pluss}</button>
-      <button type="button" class="e-knapp e-knapp--ikon" data-handling="kopierBoenhet" data-id="${fo.id}" title="Kopier bolignummer ${fo.bruksenhetsNr}" aria-label="Kopier bolignummer ${fo.bruksenhetsNr}" ${kanLegge ? '' : 'disabled'}>${E_IKON.kopier}</button>
-      <button type="button" class="e-knapp e-knapp--ikon e-knapp--subtil-destruktiv" data-handling="slettBoenhet" data-id="${fo.id}" title="Slett bolignummer ${fo.bruksenhetsNr}" aria-label="Slett bolignummer ${fo.bruksenhetsNr}">${E_IKON.soppel}</button></td>` : '';
+    const handling = kanRedigere ? `<td class="e-tabell__handling" data-endret="11">${radMeny(fo, kanLegge)}</td>` : '';
     return `<tr class="${fo.enabled ? '' : 'er-av'}${radFeil ? ' er-feil' : ''}">${forste}${kol.slice(1).map(k => celle(fo, k)).join('')}${livCeller}${handling}</tr>
       ${varsel ? `<tr><td colspan="${kol.length + livKol.length + 1}" style="padding:0;border:0">${F.hjelpTekst(`varsel-${fo.id}`, varsel)}</td></tr>` : ''}
       ${liv && fo.enabled && F.harFeil(`boenheter.${i}.bkId`) ? `<tr><td colspan="${kol.length + livKol.length + 1}" style="border:0;padding-top:0">${F.feilHtml(`boenheter.${i}.bkId`)}</td></tr>` : ''}`;

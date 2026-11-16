@@ -60,7 +60,9 @@ const E_VERSJONER = [
       { side: 'utbetaling.html', soknad: 'innvilget', tekst: 'Ny side: søknad om utbetaling, der klimagassregnskapet lastes opp og sammenlignes med tallene fra søknaden. Åpnes fra «Søk om utbetaling» på Havnelageret.' },
       { side: 'saksbehandler.html', soknad: 'innvilget', tekst: 'Ny side: saksbehandlers visning av klimatallene, med andeler, grenseverdier og status.' },
       { side: 'saksbehandler.html', soknad: 'innvilget', tekst: 'Boenhetene med bygningstype, arealgrense og om de er med i låneutmålingen, og fila til Elements (CSV) med de samme kolonnene.' },
-      { side: 'soknad.html', soknad: 'klima', steg: 'boligkvaliteter', tekst: 'En boenhet over arealgrensen for bygningstypen får et «i» i stedet for «?». Trykk på det for å se merknaden. Antallet med og uten i låneutmålingen står under.' }
+      { side: 'soknad.html', soknad: 'klima', steg: 'boligkvaliteter', tekst: 'En boenhet over arealgrensen for bygningstypen får et «i» i stedet for «?». Trykk på det for å se merknaden. Antallet med og uten i låneutmålingen står under.' },
+      { side: 'soknad.html', soknad: 'klima', steg: 'boligkvaliteter', tekst: 'Valgene på hver boenhet (legg til, dupliser, slett) ligger bak tre prikker, som ved oppgradering.' },
+      { side: 'soknad.html', soknad: 'klima', steg: 'boligkvaliteter', tekst: 'Kolonnene i tabellen med grenseverdier heter «Antatt utslipp» og «Grenseverdi».' }
     ]
   }
 ];

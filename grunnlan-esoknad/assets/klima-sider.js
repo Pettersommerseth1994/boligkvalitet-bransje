@@ -16,7 +16,7 @@ function klimaTabell(pf, { grenser = true } = {}) {
   const linje = (navn, g) => (g ? `<tr class="e-tabell__sum"><td>${navn}${g.vektet ? ', vektet' : ''}</td><td class="e-tall">${eTusen(g.bta)}</td><td class="e-tall">${pst(g.bta, r.totalBta)}</td>
     <td class="e-tall">${g.utslipp == null ? '' : fmtGrense(g.utslipp)}</td>${grenser ? `<td class="e-tall">${fmtGrense(g.grense)}</td><td class="e-tall">${status(g.ok)}</td>` : ''}</tr>` : '');
   return `<div class="e-tabell-rulle"><table class="e-tabell">
-    <thead><tr><th>Del</th><th class="e-tall">m² BTA</th><th class="e-tall">Andel</th><th class="e-tall">Antatt</th>${grenser ? '<th class="e-tall">Grense</th><th class="e-tall">Status</th>' : ''}</tr></thead>
+    <thead><tr><th>Del</th><th class="e-tall">m² BTA</th><th class="e-tall">Andel</th><th class="e-tall">Antatt utslipp</th>${grenser ? '<th class="e-tall">Grenseverdi</th><th class="e-tall">Status</th>' : ''}</tr></thead>
     <tbody>${r.rader.map(d => `<tr><td>${d.t.tittel}, ${KV_DEL[d.del]}</td><td class="e-tall">${eTusen(d.bta)}</td><td class="e-tall">${pst(eNum(d.bta), r.totalBta)}</td>
       <td class="e-tall">${kvTall(d.co2) ? eEsc(d.co2) : ''}</td>${grenser ? `<td class="e-tall">${d.grense}</td><td class="e-tall">${status(d.over == null ? null : !d.over)}</td>` : ''}</tr>`).join('')}
       ${linje('Bygg uten kjeller', r.bygg)}${linje('Kjeller', r.kjeller)}</tbody>
