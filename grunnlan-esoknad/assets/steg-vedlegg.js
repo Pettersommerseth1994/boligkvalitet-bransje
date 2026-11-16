@@ -20,7 +20,7 @@ STEG.vedlegg = {
       ${S.vedleggskrav(pf).map(k => {
         const filer = pf.vedlegg.filter(v => v.kategori === k.id);
         const id = F.id(`vedlegg-${k.id}`);
-        return `<div class="e-vedlegg${F.harFeil(`vedlegg-${k.id}`) ? ' e-felt--feil' : ''}" data-feltboks="vedlegg-${k.id}" id="${F.id(`vedlegg-${k.id}`)}-boks">
+        return `<div class="e-vedlegg${F.harFeil(`vedlegg-${k.id}`) ? ' e-felt--feil' : ''}" data-feltboks="vedlegg-${k.id}" id="${F.id(`vedlegg-${k.id}`)}-boks"${k.endret ? ` data-endret="${k.endret}"` : ''}>
           <div class="e-vedlegg__topp">
             <div><h3>${k.tittel}</h3>${k.hjelp ? `<div class="e-liten e-sekundaer">${/^\s*</.test(k.hjelp) ? k.hjelp : `<p class="e-mb0">${k.hjelp}</p>`}</div>` : ''}</div>
             <div><label class="e-knapp e-knapp--liten" for="${id}">${E_IKON.opplasting}Last opp</label>

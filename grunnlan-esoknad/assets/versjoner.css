@@ -1,0 +1,20 @@
+/* ──────────────────────────────────────────────────────────────────
+   Versjonsboksen i e-søknaden
+
+   Bygger på boksen fra papirsøknadene (hb-versjoner.css). Her ligger den
+   nede til venstre, fordi toppen er opptatt av stripa og headeren.
+   Lastes av alle versjonene, så boksen ser lik ut i alle.
+   ────────────────────────────────────────────────────────────────── */
+
+.versjoner { top: auto; bottom: 16px; }
+
+body.viser-endringer [data-endret]::before { content: attr(data-endret); }
+
+@media screen and (max-width: 1300px) {
+  .versjoner {
+    position: static;
+    width: min(var(--e-md), calc(100% - 2 * var(--space-3)));
+    margin: var(--space-4) auto 0;
+  }
+  .versjoner__liste { max-height: none; }
+}

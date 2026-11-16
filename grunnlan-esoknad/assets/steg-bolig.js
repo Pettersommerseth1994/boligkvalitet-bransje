@@ -44,7 +44,6 @@ const B = {
   visBoliger: pf => (S.oppgPakker(pf) ? ogKlar(S.oppg(pf)) : S.visBK(pf) ? (pf.boligkonfigurasjoner || []).some(k => !k.utenforKvalitetskriterier) : true),
   visA: pf => S.visBK(pf) && !S.oppfOmb(pf) && !S.oppgPakker(pf),
   visB: pf => B.visBoliger(pf) && !S.er(pf, 'KJOP', 'OPPFORING', 'OMBYGGING') && !S.boligsosialt(pf) && !S.oppgPakker(pf),
-  visC: pf => S.oppfOmb(pf) && S.visBK(pf),
   visD: pf => B.visBoliger(pf) || S.oppfOmb(pf),
   visVelgBk: pf => S.visBK(pf) && !S.oppfOmb(pf) && !S.oppgPakker(pf),
   visLivslop: pf => S.visBK(pf) && S.oppfOmb(pf) && pf.livslopsboliger === true,
@@ -108,7 +107,7 @@ STEG.boligkvaliteter = {
   },
 
   tegn: pf => {
-    const a = B.visA(pf); const c = B.visC(pf); const d = B.visD(pf);
+    const a = B.visA(pf); const d = B.visD(pf);
     const aktive = S.aktiveBoenheter(pf);
     const med = aktive.filter(fo => {
       const x = S.alleValgteAdresser(pf).find(y => y.a.id === fo.adresseId);
@@ -125,7 +124,6 @@ STEG.boligkvaliteter = {
       ${a ? blokkKvalitetskrav(pf) : ''}
       ${S.oppgPakker(pf) ? blokkOppgradering(pf) : ''}
       ${B.visB(pf) ? blokkEnergikarakter(pf) : ''}
-      ${c && !erKlimavennlig(pf) ? blokkKlima(pf) : ''}
       ${d ? S.alleValgteBygg(pf).map(({ e, b }) => `
         <h2 class="e-h2 e-mt">${eEsc(S.byggNavn(b))}</h2>
         ${S.valgteAdresser(b).map(adr => adresseBlokk(pf, e, b, adr)).join('')}`).join('') : ''}
@@ -171,16 +169,6 @@ STEG.boligkvaliteter = {
         if (['OPP', 'BEGGE'].includes(x.kjeller)) { tall('oppBta', x.oppBta); tall('oppCo2', x.oppCo2); }
         if (['UOPP', 'BEGGE'].includes(x.kjeller)) { tall('uoppBta', x.uoppBta); tall('uoppCo2', x.uoppCo2); }
       });
-    }
-    if (B.visC(pf) && !erKlimavennlig(pf)) {
-      const k = pf.klima || {};
-      if (V.tom(k.btaTotalt)) feil('klima.btaTotalt', 'Du må skrive totalt BTA for prosjektet.');
-      else if (!V.heltall(k.btaTotalt) || eNum(k.btaTotalt) < 1) feil('klima.btaTotalt', 'BTA kan bare være tall, for eksempel 1200.');
-      {
-        if (V.tom(k.co2)) feil('klima.co2', 'Du må skrive antatt kg CO₂-ekv./m² BTA for prosjektet.');
-        else if (!V.heltall(k.co2)) feil('klima.co2', 'Klimagassavtrykket kan bare være tall, for eksempel 150.');
-        if (k.oppvarmetKjeller == null) feil('klima.oppvarmetKjeller', 'Du må svare på om kjelleren vil være oppvarmet.');
-      }
     }
     if (!B.visD(pf)) return f;
 
@@ -385,36 +373,15 @@ function blokkEnergikarakter(pf) {
     ${F.radio({ felt: 'energikarakterEtter', label: `Energikarakter <b>etter</b> ${t}`, rad: true, valg })}` });
 }
 
-const BTA_HJELP = 'BTA betyr bruttoareal. Det er hele arealet i prosjektet, målt til utsiden av ytterveggene, i alle etasjer. Kjeller og loft regnes med, og det samme gjør arealet veggene tar opp. En garasje, bod eller et anneks som står for seg selv, regnes ikke med.';
 const CO2_ENHET = 'kg CO₂-ekv./m² BTA';
 
 /* Grenseverdiene i forslaget til ny § 2-3 (høringsnotat, KDD sak 26/1208),
-   i kg CO₂-ekv./m² BTA. Bygget og kjelleren har hver sine. Er ett av de
-   valgte byggene en blokk, regnes prosjektet som boligblokk. Ellers er det
-   et småhusprosjekt, og totalt BTA avgjør om det er under eller minst 1000 m². */
+   i kg CO₂-ekv./m² BTA. Bygget og kjelleren har hver sine. */
 const CO2_GRENSER = {
   BOLIGBLOKK: { navn: 'boligblokk', bygg: 247, oppvarmet: 180, uoppvarmet: 139 },
   SMAHUS_STOR: { navn: 'småhusprosjekter på minimum 1000 m² BTA', bygg: 130, oppvarmet: 206, uoppvarmet: 159 },
   SMAHUS: { navn: 'småhusprosjekter under 1000 m² BTA', bygg: 167, oppvarmet: 232, uoppvarmet: 179 }
 };
-const co2Kategori = pf => {
-  const typer = S.alleValgteBygg(pf).map(({ b }) => S.hbType(pf, b));
-  if (typer.some(t => ['BLOKK', 'OMSORGSBOLIGSYKEHJEM'].includes(t))) return CO2_GRENSER.BOLIGBLOKK;
-  return eNum((pf.klima || {}).btaTotalt) >= 1000 ? CO2_GRENSER.SMAHUS_STOR : CO2_GRENSER.SMAHUS;
-};
-const co2GrenseBygg = pf => co2Kategori(pf).bygg;
-const co2GrenseKjeller = pf => ((pf.klima || {}).oppvarmetKjeller === true ? co2Kategori(pf).oppvarmet : co2Kategori(pf).uoppvarmet);
-
-/* Advarsel under et CO₂-felt når tallet er over grenseverdien. Samme stil
-   som feilmeldingene, men den stopper ikke «Neste steg». */
-function co2Advarsel(pf, felt, grense) {
-  if (grense == null) return '';
-  const v = (pf.klima || {})[felt.split('.')[1]];
-  return !V.tom(v) && V.heltall(v) && eNum(v) > grense
-    ? `<div class="e-feilmelding" id="${F.id(felt)}-advarsel">${E_IKON.feil}<span>For å kvalifisere til dette lånet kan klimagassavtrykket ikke være høyere enn ${fmtGrense(grense)} ${CO2_ENHET}.</span></div>`
-    : '';
-}
-
 /* Tallet avrundes til nærmeste hele når grenseverdien er vektet (et snitt). */
 function fmtGrense(n) { return String(Math.round(n)); }
 
@@ -427,17 +394,6 @@ function blokkKlimabudsjett(pf) {
     ? `<div class="e-feilmelding" id="${F.id('klima.harKlimabudsjett')}-advarsel">${E_IKON.feil}<span>Uten et klimagassbudsjett etter NS 3720:2018 kvalifiserer du ikke til dette lånet. Du må få laget budsjettet før du søker.</span></div>`
     : '';
   return F.janei({ felt: 'klima.harKlimabudsjett', label: 'Er det blitt utarbeidet et klimagassbudsjett for prosjektet etter NS 3720:2018?', etter: advarsel });
-}
-
-/* Et tallfelt med enheten til høyre, som i lånesøknaden */
-function tallMedEnhet({ felt, label, enhet, hjelp, etter = '' }) {
-  const id = F.id(felt);
-  return `<div class="e-felt${F.harFeil(felt) ? ' e-felt--feil' : ''}" data-feltboks="${felt}">
-    <div class="e-felt__labelrad"><label class="e-felt__label" for="${id}">${label}</label>${hjelp ? F.hjelpKnapp(felt) : ''}</div>
-    ${hjelp ? F.hjelpTekst(felt, hjelp) : ''}
-    <div class="e-enhet"><input class="e-input e-input--s" id="${id}" inputmode="numeric" data-felt="${felt}" data-type="tekst" value="${eEsc(F.hent(felt) ?? '')}" aria-describedby="${id}-feil"><span class="e-enhet__tekst">${enhet}</span></div>
-    ${F.feilHtml(felt)}${etter}
-  </div>`;
 }
 
 /* Hva som er blokk og småhus, etter DiBKs veiledning til TEK17 § 14-2 (NS 3457-3) */
@@ -565,14 +521,6 @@ function blokkKlimaTyper(pf) {
     ${kvResultat(r)}`;
 }
 
-function blokkKlima(pf) {
-  return `<div class="e-avsnitt">
-    ${tallMedEnhet({ felt: 'klima.btaTotalt', label: 'Hva er totalt BTA på hele prosjektet?', enhet: 'm² BTA', hjelp: BTA_HJELP })}
-    ${tallMedEnhet({ felt: 'klima.co2', label: 'Hva er antatt kg CO₂-ekv./m² BTA for prosjektet uten kjellerareal?', enhet: CO2_ENHET, etter: co2Advarsel(pf, 'klima.co2', co2GrenseBygg(pf)) })}
-    ${F.janei({ felt: 'klima.oppvarmetKjeller', label: 'Vil kjelleren være oppvarmet?', rad: false })}
-  </div>`;
-}
-
 function adresseBlokk(pf, e, b, a) {
   const rader = S.boenheter(pf, a.id);
   const etasjer = S.sorterEtasjer(rader.map(f => f.etasje));
@@ -667,7 +615,7 @@ function etasjeBlokk(pf, b, a, etasje, kanLegge) {
     const varsel = oppf ? S.utmalingsvarsel(pf, b, a, fo) : '';
     const radFeil = F.visFeil && fo.enabled && F.feilliste.some(x => x.nokkel.startsWith(`boenheter.${i}.`));
     const forste = oppf
-      ? `<td>${varsel ? `<span style="color:var(--e-advarsel-kant)">${F.hjelpKnapp(`varsel-${fo.id}`, 'Vis merknad')}</span>` : ''}<span class="e-sr">${fo.etasje}${fo.bruksenhetsNr}</span></td>`
+      ? `<td>${varsel ? `<span style="color:var(--e-advarsel-kant)">${F.hjelpKnapp(`varsel-${fo.id}`, 'Vis merknad om arealgrensen', 'i', ' data-endret="10"')}</span>` : ''}<span class="e-sr">${fo.etasje}${fo.bruksenhetsNr}</span></td>`
       : `<td><label class="e-valg" style="padding:0"><input type="checkbox" id="${F.id(`boenheter.${i}.enabled`)}" data-felt="boenheter.${i}.enabled" data-type="sjekk" ${fo.enabled ? 'checked' : ''}><span>${fo.etasje}${fo.bruksenhetsNr}</span></label></td>`;
     const livCeller = livKol.map((l, j) => `<td class="e-senter"><input type="radio" name="${F.id(`liv-${fo.id}`)}" id="${F.id(`liv-${fo.id}-${j}`)}" value="${livBk[j] ? livBk[j].id : ''}" data-felt="boenheter.${i}.bkId" data-type="radio" ${livBk[j] && fo.bkId === livBk[j].id ? 'checked' : ''} aria-label="${l} for ${fo.etasje}${fo.bruksenhetsNr}" style="width:20px;height:20px;accent-color:var(--e-knapp)"></td>`).join('');
     const handling = kanRedigere && S.oppgPakker(pf) ? `<td class="e-tabell__handling">${radMeny(fo, kanLegge)}</td>`

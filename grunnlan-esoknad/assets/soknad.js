@@ -10,10 +10,10 @@ S.TILTAK = {
   OPPFORING: { valg: 'Bygge nye boliger (oppføring)', kort: 'Oppføring', produkt: 'Lån til oppføring' },
   OPPGRADERING: { valg: 'Oppgradere eksisterende boliger', kort: 'Oppgradering', produkt: 'Lån til oppgradering' },
   KJOP: { valg: 'Kjøpe boliger', kort: 'Kjøp', produkt: 'Lån til kjøp' },
-  OMBYGGING: { valg: 'Gjøre om bygg til boligformål (ombygging)', kort: 'Ombygging', produkt: 'Lån til ombygging' }
+  OMBYGGING: { valg: 'Gjøre om bygg til boligformål (transformasjon)', kort: 'Transformasjon', produkt: 'Lån til transformasjon' }
 };
 S.LANEFORMAL = { KLIMAVENNLIG: 'Klimavennlig bolig', LIVSLOPSSTANDARD: 'Livsløpsstandard' };
-S.PRODUKTNAVN = { OPPFORING: 'Lån til oppføring', KJOP: 'Lån til kjøp', OMBYGGING: 'Lån til ombygging', OPPGRADERING: 'Lån til oppgradering', TILSKUDDUTLEIE: 'Tilskudd til utleieboliger' };
+S.PRODUKTNAVN = { OPPFORING: 'Lån til oppføring', KJOP: 'Lån til kjøp', OMBYGGING: 'Lån til transformasjon', OPPGRADERING: 'Lån til oppgradering', TILSKUDDUTLEIE: 'Tilskudd til utleieboliger' };
 S.VIRKEMIDDEL = { GRUNNLAN: 'Lån', TILSKUDDUTLEIE: 'Tilskudd' };
 
 S.finn = (t, id) => t.soknader.find(s => String(s.id) === String(id));
@@ -32,9 +32,6 @@ S.kanLeggeTilBoliger = pf => !!pf.prosjektTiltakKode && !S.er(pf, 'KJOP');
 /* Kvalitetskrav og boligkonfigurasjoner gjelder ikke når det er avtale med kommunen */
 S.visBK = pf => !S.harAvtale(pf) || (S.er(pf, 'OPPFORING') && S.salg(pf));
 S.boligsosialt = pf => S.harAvtale(pf);
-/* Totalt BTA, klimagassavtrykk og kjeller spørres om der miljø- og
-   livsløpskravene sto før: oppføring og ombygging uten avtale med kommunen. */
-S.visKlima = pf => S.oppfOmb(pf) && S.visBK(pf);
 /* Oppføring med formålet «Klimavennlig bolig», valgt på «Opprett søknad» */
 S.erKlimavennlig = pf => S.er(pf, 'OPPFORING') && pf.laneformal === 'KLIMAVENNLIG';
 /* Oppgradering: oppgraderingspakker på Bolig-steget i stedet for boligkvaliteter i en modal */
@@ -103,7 +100,7 @@ S.MAKS_BOENHETER = { SMAHUS: 3, ENEBOLIGMEDHYBEL: 2, ENEBOLIG: 1 };
 S.maksAreal = (type, bruksenhetsNr) => {
   if (type === 'BLOKK') return 130;
   if (type === 'ENEBOLIG') return 200;
-  if (type === 'SMAHUS') return 150;
+  if (type === 'SMAHUS') return 200;
   if (type === 'ENEBOLIGMEDHYBEL') return Number(bruksenhetsNr) === 1 ? 200 : 80;
   return null;
 };
@@ -180,7 +177,7 @@ S.VEDLEGG = [
     regel: pf => !S.salg(pf) && eNum(S.okonomi(pf).andrelan) > 0 },
   { id: 'DOKUMENTASJONTILSKUDDANDRE_VEDLEGG', tittel: 'Dokumentasjon på tilskudd fra andre', hjelp: 'Skriftlig beskrivelse av tilskudd.',
     regel: pf => !S.salg(pf) && eNum(S.okonomi(pf).andreTilskudd) > 0 },
-  { id: 'KLIMABUDSJETT_VEDLEGG', tittel: 'Klimagassbudsjett', hjelp: 'Klimagassbudsjettet må være laget etter NS 3720:2018.',
+  { id: 'KLIMABUDSJETT_VEDLEGG', endret: 4, tittel: 'Klimagassbudsjett', hjelp: 'Klimagassbudsjettet må være laget etter NS 3720:2018. Ved søknad om utbetaling eller før videresalg må ferdig klimagassregnskap sendes inn.',
     /* Bare for «Klimavennlig bolig», og bare når de har svart ja på at budsjettet er laget */
     regel: pf => S.erKlimavennlig(pf) && (pf.klima || {}).harKlimabudsjett === true },
   { id: 'FASADETEGNINGER_VEDLEGG', tittel: 'Fasadetegninger', hjelp: 'Fasadetegningen må ha angitt målestokk.', regel: pf => S.er(pf, 'OPPFORING', 'OPPGRADERING', 'OMBYGGING') },
@@ -190,7 +187,7 @@ S.VEDLEGG = [
   { id: 'PLANTEGNINGER_VEDLEGG', tittel: 'Plantegninger', hjelp: 'Plantegninger må ha angitt målestokk.', regel: pf => S.er(pf, 'OPPFORING', 'OPPGRADERING', 'OMBYGGING') },
   { id: 'PLANTEGNINGERFORTILTAKET_VEDLEGG', tittel: 'Plantegninger før tiltaket', hjelp: 'Plantegninger må ha angitt målestokk, og skal vise situasjonen før planlagt endring.', regel: pf => S.er(pf, 'OPPGRADERING', 'OMBYGGING') },
   { id: 'KONTRAKT_VEDLEGG', tittel: 'Pristilbud/Kontrakt/Prisoverslag på tiltaket', regel: pf => S.er(pf, 'OPPFORING', 'OPPGRADERING', 'OMBYGGING') },
-  { id: 'PROSJEKTBESKRIVELSE_VEDLEGG', tittel: 'Prosjektbeskrivelse/Byggbeskrivelse', hjelp: 'Prosjektbeskrivelsen skal inneholde en nærmere spesifisering av prosjektet. Ved oppgradering eller ombygging skal dagens tilstand beskrives.', regel: () => true },
+  { id: 'PROSJEKTBESKRIVELSE_VEDLEGG', tittel: 'Prosjektbeskrivelse/Byggbeskrivelse', hjelp: 'Prosjektbeskrivelsen skal inneholde en nærmere spesifisering av prosjektet. Ved oppgradering eller transformasjon skal dagens tilstand beskrives.', regel: () => true },
   { id: 'PROSPEKT_VEDLEGG', tittel: 'Prospekt', regel: pf => S.er(pf, 'KJOP') },
   { id: 'SALGSPROSPEKT_VEDLEGG', tittel: 'Salgsprospekt med prisliste', regel: pf => S.salg(pf) },
   { id: 'SAMARBEIDSAVTALE_VEDLEGG', tittel: 'Samarbeidsavtale', hjelp: 'Samarbeidsavtalen mellom kommunen eller det statlige helseforetaket som regulerer det løpende samarbeidet og forvaltningen av boligene.', regel: S.harAvtale },
@@ -233,7 +230,7 @@ S.ny = (t, valg) => {
   return pf;
 };
 
-/* Boligkonfigurasjonene som lages for oppføring og ombygging */
+/* Boligkonfigurasjonene som lages for oppføring og transformasjon */
 S.standardKonfigurasjoner = (pf, t) => {
   pf.boligkonfigurasjoner = [
     { id: eNyId(t), navn: 'Ingen boligkvalitet', utenforKvalitetskriterier: true, koder: [] },
@@ -265,7 +262,7 @@ function eEksempelsoknader(t) {
       { id: id(), navn: 'Havnelageret', fraMatrikkelen: false, visForValgtTiltak: true, bygningstypeProsjektert: 'Stort frittliggende boligbygg på 3 og 4 etasjer',
         adresserFraMatrikkelen: [], adresser: [{ id: a1, veiNavn: 'Havnegata', veiNummer: '20', veiBokstav: 'A', enabled: true }, { id: a2, veiNavn: 'Havnegata', veiNummer: '20', veiBokstav: 'B', enabled: true }] }] }],
     boenheter: [], boligkonfigurasjoner: [], laneformal: 'KLIMAVENNLIG', miljoboliger: true, livslopsboliger: false,
-    klima: { btaTotalt: '1850', co2: '165', oppvarmetKjeller: false },
+    klima: { harKlimabudsjett: true, typer: ['BLOKK'], blokk: { bta: '1850', co2: '165', kjeller: 'UOPP', uoppBta: '420', uoppCo2: '120' } },
     okonomi: { byggekostnader: 38500000, tomtekostnader: 4200000, omsetningsverdi: 46000000, gjeld: 0, grunnlan: 36000000, egenkapital: 6700000, lanType: 'ANNUITETSLAN', avdragsfriPeriode: '2', nedbetalingsPeriode: '40' },
     vedlegg: [], kundeskjema: 'ok', besokt: S.STEG.map(s => s.path)
   };
@@ -287,5 +284,30 @@ function eEksempelsoknader(t) {
     kontaktinformasjon: { navn: E_BRUKER, epost: 'ola.nordmann@fjordbyen.example', telefonNr: '40000011' }, utfyllingssteg: 'eiendomsopplysninger'
   };
   S.standardKonfigurasjoner(pabegynt, t);
-  return [pabegynt, innvilget];
+
+  /* 3. Påbegynt klimavennlig prosjekt med både blokk og småhus, stoppet på Bolig.
+     Én leilighet er over arealgrensen for blokk, så merknaden vises. */
+  const k1 = id();
+  const klimavennlig = {
+    id: id(), navn: 'Furulund boligpark', status: 'UFERDIG', hilsStatus: 'UKJENT', opprettet: dagerSiden(6),
+    sistEndretDato: dagerSiden(1), sistEndretAv: E_BRUKER,
+    prosjektTiltakKode: 'OPPFORING', laneformal: 'KLIMAVENNLIG', miljoboliger: true, livslopsboliger: false, formalKode: 'SALG', finansieringsProdukter: ['OPPFORING'],
+    soker, okonomi: {}, vedlegg: [], besokt: ['prosjektinformasjon', 'eiendomsopplysninger', 'boligkvaliteter'],
+    eiendommer: [{ id: id(), kommuneNr: '3301', gaardsNr: '87', bruksNr: '14', festeNr: '0', seksjonsNr: '0', fraMatrikkelen: true, bygg: [
+      { id: id(), navn: 'Furulund hus A', fraMatrikkelen: false, visForValgtTiltak: true, bygningstypeProsjektert: 'Stort frittliggende boligbygg på 3 og 4 etasjer',
+        adresserFraMatrikkelen: [], adresser: [{ id: k1, veiNavn: 'Furulundveien', veiNummer: '2', veiBokstav: '', enabled: true }] }] }],
+    boenheter: [],
+    oppstart: neste(4), ferdig: neste(22), kjop: false, omsattApentMarked: true, sentralGodkjenning: true,
+    naerstaendeArbeid: false, naerstaendeSelger: false, forbildeprosjekt: false,
+    kontaktinformasjon: { navn: E_BRUKER, epost: 'ola.nordmann@fjordbyen.example', telefonNr: '40000011' }, utfyllingssteg: 'boligkvaliteter',
+    klima: { harKlimabudsjett: true, typer: ['BLOKK', 'SMAHUS'],
+      blokk: { bta: '2400', co2: '238', kjeller: 'BEGGE', oppBta: '300', oppCo2: '170', uoppBta: '500', uoppCo2: '150' },
+      smahus: { bta: '900', co2: '160', kjeller: 'INGEN' } }
+  };
+  S.standardKonfigurasjoner(klimavennlig, t);
+  ['H01', 'H02'].forEach((et, ei) => ['01', '02'].forEach((nr, ni) => klimavennlig.boenheter.push({
+    id: id(), adresseId: k1, etasje: et, bruksenhetsNr: nr, enabled: true, boligbetegnelse: `A${ei + 1}${ni + 1}`,
+    bruksAreal: ei === 1 && ni === 1 ? '142' : String(64 + ni * 18), antallRom: String(2 + ni)
+  })));
+  return [klimavennlig, pabegynt, innvilget];
 }

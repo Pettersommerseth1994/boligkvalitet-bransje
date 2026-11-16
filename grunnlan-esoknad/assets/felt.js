@@ -65,9 +65,9 @@ F.sammendrag = (tittel = 'Du må svare på disse feltene før du kan gå videre:
 
 /* ═══ Hjelpetekst (?) ═════════════════════════════════════════════ */
 
-F.hjelpKnapp = (nokkel, tittel = 'Vis hjelpetekst') => {
+F.hjelpKnapp = (nokkel, tittel = 'Vis hjelpetekst', tegn = '?', attr = '') => {
   const apen = F.apneHjelp.has(nokkel);
-  return `<span class="e-hjelp"><button type="button" class="e-hjelp__knapp" data-hjelp="${eEsc(nokkel)}" aria-expanded="${apen}" aria-controls="${F.id(`h-${nokkel}`)}" aria-label="${tittel}">?</button></span>`;
+  return `<span class="e-hjelp"${attr}><button type="button" class="e-hjelp__knapp" data-hjelp="${eEsc(nokkel)}" aria-expanded="${apen}" aria-controls="${F.id(`h-${nokkel}`)}" aria-label="${tittel}">${tegn}</button></span>`;
 };
 F.hjelpTekst = (nokkel, html) => `<div class="e-hjelp__tekst" id="${F.id(`h-${nokkel}`)}"${F.apneHjelp.has(nokkel) ? '' : ' hidden'}>${html}</div>`;
 

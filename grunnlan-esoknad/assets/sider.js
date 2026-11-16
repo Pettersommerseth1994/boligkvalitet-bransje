@@ -86,6 +86,8 @@ function forsiden() {
       hils === 'INNVILGET' && !S.er(pf, 'KJOP') && !iverksatt && knapp('igangsettelse', 'Igangsettelse'),
       ['UNDERBEHANDLING_SOKNAD', 'FEILMANGEL', 'INNVILGET'].includes(hils) && !S.er(pf, 'KJOP') && !iverksatt && knapp('utsett-oppstart', 'Utsette oppstart'),
       !S.salg(pf) && ['INNVILGET', 'UNDERBEHANDLING_SOKNAD', 'FEILMANGEL'].includes(hils) && knapp('endre-lantaker', 'Endre låntaker'),
+      hils === 'INNVILGET' && S.erKlimavennlig(pf) && !pf.utbetalingSokt && knapp('utbetaling', 'Søk om utbetaling'),
+      pf.status !== 'UFERDIG' && knapp('saksbehandler', 'Saksbehandlers visning (prototype)', 'e-knapp--lenke'),
       pf.trekkbar && knapp('trekk', 'Trekk søknad', 'e-knapp--subtil-destruktiv'),
       pf.status === 'TILSIGNERING' && knapp('kanseller', 'Kanseller signering', 'e-knapp--subtil-destruktiv')
     ].filter(Boolean);
@@ -207,7 +209,8 @@ function opprett() {
           <dl class="e-dl"><dt>E-post</dt><dd>${epost.length ? epost.map(eEsc).join('<br>') : 'Ingen'}</dd><dt>Telefon</dt><dd>${tlf.length ? tlf.join('<br>') : 'Ingen'}</dd></dl>
           ${F.gruppefeil('harGyldigEpost')}` })}
 
-        ${F.radio({ felt: 'tiltak', label: 'Hva skal dere gjøre?', valg: TILTAK_BRANSJE.map(k => ({ v: k, l: S.TILTAK[k].valg })) })}
+        <div data-endret="1">${F.radio({ felt: 'tiltak', label: 'Hva skal dere gjøre?', valg: TILTAK_BRANSJE.map(k => ({ v: k, l: S.TILTAK[k].valg })) })}</div>
+        ${d.tiltak === 'OMBYGGING' ? eCallout('info', `<p>Lån til transformasjon vurderer vi for hvert prosjekt for seg. Ta kontakt med regionkontoret i Husbanken før dere søker. Da kan vi se på prosjektet sammen med dere i et forprosjekt.</p>`, false, ' data-endret="5"') : ''}
 
         ${r.laneformal(d) ? F.radio({ felt: 'laneformal', label: 'Velg formål', valg: Object.entries(S.LANEFORMAL).map(([v, l]) => ({ v, l })) }) : ''}
 

@@ -29,7 +29,7 @@ python3 -m http.server 4321
 ## Hva som er med
 
 Kundetypen er bransje («Eiendomsutvikler/Boligutvikler»), med alle de fire
-tiltakene bransjen kan velge: oppføring, oppgradering, kjøp og ombygging.
+tiltakene bransjen kan velge: oppføring, oppgradering, kjøp og transformasjon.
 Salg og utleie, avtale med kommunen (tilvisning, tildeling eller ingen),
 annen låntaker og tilskudd til utleieboliger virker som i dag.
 
@@ -42,10 +42,30 @@ annen låntaker og tilskudd til utleieboliger virker som i dag.
 | `klima-forslag.html` | Fem forslag til klimagassavtrykket på Bolig-steget, etter Miro-skissen. Forslag 2 er valgt og ligger nå i søknaden. |
 | `oppgradering-forslag.html` | Fem forslag til Bolig-steget ved oppgradering, uten modalen med boligkvaliteter: velg tilgjengelighet eller energi først, så masseredigering av boenhetene. Forslag 4, oppgraderingspakker, er valgt og ligger nå i søknaden. |
 | `endre-lantaker.html`, `igangsettelse.html`, `utsett-oppstart.html` | Valgene på en søknad som er innvilget. |
+| `utbetaling.html` | Søknad om utbetaling for klimavennlig bolig, med klimagassregnskapet. Vises på en innvilget klimavennlig søknad. |
+| `saksbehandler.html` | Saksbehandlers visning (prototype): klimatallene med andeler og grenseverdier, boenhetene, og fila til Elements. Vises på innsendte søknader. |
 
-To eksempelsøknader ligger klare første gang: en påbegynt, som også viser
-«Utsett sletting», og en innvilget, som viser igangsettelse, utsatt oppstart og
-endre låntaker. «Start på nytt» henter dem tilbake.
+Tre eksempelsøknader ligger klare første gang: en påbegynt med
+livsløpsstandard, som også viser «Utsett sletting», en påbegynt klimavennlig
+med både blokk og småhus, stoppet på Bolig, der én leilighet er over
+arealgrensen, og en innvilget klimavennlig, som viser
+igangsettelse, utsatt oppstart og endre låntaker. «Start på nytt» henter dem
+tilbake.
+
+## Versjonene
+
+Boksen «Versjoner» lar deg hoppe mellom versjonene. Bryteren «Vis endringene»
+markerer det som er endret, og punktene i lista tar deg til riktig side, steg
+og eksempelsøknad. Lista står i [`assets/versjoner.js`](assets/versjoner.js),
+sammen med hvordan du legger til en ny versjon. Forslagssidene
+(`klima-forslag.html` og `oppgradering-forslag.html`) er ikke med i versjonene.
+
+| Versjon | Mappe | Hva som endret seg |
+| --- | --- | --- |
+| 1, 9. november 2026 | `v1/` | Klimavennlig bolig med alternativ 2 fra Miro: blokk og/eller småhus, et kort per type, grenseverdier og klimagassbudsjett. |
+| 2, 16. november 2026 | denne mappa | Post-it-lappene fra Miro: transformasjon med kontakt med regionkontoret, klimaspørsmål bare for Klimavennlig bolig, småhus opptil 200 m² med «i» over grensen, andeler i oppsummeringen, søknad om utbetaling med klimagassregnskap, og saksbehandlers visning med fil til Elements. |
+
+Hver versjon lagrer svarene sine for seg.
 
 Ikke med: kommune, fylkeskommune, kommunekontrollerte foretak og borettslag,
 energitiltak, istandsetting og rentekompensasjon for skole. Det gjelder også
@@ -85,12 +105,24 @@ Prototypen er ikke lenger en ren kopi. Disse endringene er gjort med vilje:
 - **«Velg formål»** på «Opprett søknad» når tiltaket er oppføring: Klimavennlig
   bolig eller Livsløpsstandard. Livsløpsstandard gir livsløpskolonnene i
   boligtabellen, som før fulgte svaret på Bolig-steget.
+- **Transformasjon** erstatter ombygging: «Gjøre om bygg til boligformål
+  (transformasjon)» og «Lån til transformasjon».
 - **Bolig-steget** spør ikke lenger om kravene til miljøboliger og
-  livsløpsboliger. I stedet spør det om totalt BTA for hele prosjektet og antatt
-  kg CO₂-ekv./m² BTA for prosjektet eksklusive kjellerareal. Det gjelder
-  oppføring og ombygging uten avtale med kommunen, der de gamle spørsmålene
-  sto. Forklaringsboksen om kg CO₂-ekv./m² BTA er tatt bort. For ombygging og
-  Livsløpsstandard spør steget også om kjelleren vil være oppvarmet, som før.
+  livsløpsboliger. Klimaspørsmålene gjelder bare oppføring med formålet
+  Klimavennlig bolig. Livsløpsstandard og transformasjon får dem ikke.
+- **Arealgrensen for småhus** er 200 m² per boenhet, som enebolig. Blokk er
+  fortsatt 130 m².
+  En boenhet over grensen får et «i» i Merknad-kolonnen.
+- **Transformasjon** viser en boks på «Opprett søknad» som ber søkeren ta
+  kontakt med regionkontoret før de søker, for et forprosjekt.
+- **Oppsummeringen** viser andelen av prosjektets BTA og grenseverdien for
+  hver del.
+- **Søknad om utbetaling** for klimavennlig bolig krever at klimagassregnskapet
+  lastes opp, og spør om det viser samme eller lavere utslipp enn søknaden.
+- **Saksbehandlers visning** viser klimatallene med andeler, grenseverdier og
+  status, og boenhetene med bygningstype, arealgrense og om de er med i
+  låneutmålingen. Knappen «Last ned fil til Elements» gir de samme
+  kolonnene som CSV.
 - **Bolig-steget for Klimavennlig bolig** har i tillegg, øverst på siden:
   - En blå infoboks som sier at det må utarbeides et klimagassbudsjett etter
     NS 3720:2018. Den sier at det ved søknadstidspunktet bare er nødvendig med
