@@ -1,0 +1,64 @@
+/* «Merk som» i boenhetstabellen. Se velger-forslag.js. */
+
+.versjoner { display: none; }
+
+.vf-tabell td, .vf-tabell th { vertical-align: middle; }
+.vf-tabell input[type="checkbox"] { width: 20px; height: 20px; accent-color: var(--e-knapp); cursor: pointer; }
+.vf-nr { font-weight: 500; white-space: nowrap; }
+.vf-tabell tr.vf-markert td { background: var(--e-info); }
+
+.vf-status { display: inline-block; padding: 2px 10px; border-radius: 999px; font-size: 0.875rem; background: var(--e-gra); color: var(--e-sekundaer); white-space: nowrap; }
+.vf-status--med { background: var(--e-positiv); color: var(--e-tekst); font-weight: 600; }
+
+/* Handlingslinja */
+.vf-handlingslinje {
+  display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2, 8px); margin-bottom: var(--space-4, 16px);
+  padding: 8px 12px; border-radius: 12px; background: var(--e-gra); border: 1px solid var(--e-ramme);
+}
+.vf-antall { display: inline-flex; align-items: center; gap: 10px; font-weight: 600; margin-right: 4px; }
+.vf-antall input { width: 20px; height: 20px; accent-color: var(--e-mork); }
+.vf-pille {
+  display: inline-flex; align-items: center; gap: 6px; border: 0; border-radius: 999px; padding: 6px 14px; cursor: pointer;
+  background: color-mix(in srgb, var(--e-mork) 12%, white); color: var(--e-tekst); font: inherit; font-weight: 500;
+}
+.vf-pille:hover, .vf-pille[aria-expanded="true"] { background: color-mix(in srgb, var(--e-mork) 20%, white); }
+.vf-pille--lys { background: transparent; }
+.vf-pille svg { width: 16px; height: 16px; }
+
+/* Nedtrekksmenyen */
+.vf-meny-boks { position: relative; }
+.vf-meny {
+  position: absolute; left: 0; top: calc(100% + 4px); z-index: 30; min-width: 14rem;
+  display: flex; flex-direction: column; padding: 4px 0;
+  background: #fff; border: 1px solid var(--e-ramme); border-radius: var(--radius-md, 8px);
+  box-shadow: 0 4px 12px rgba(0,0,0,.12);
+}
+.vf-meny__valg {
+  display: flex; align-items: center; gap: 8px; width: 100%; padding: 10px 16px; border: 0; background: none;
+  font: inherit; font-size: var(--text-sm, 0.9375rem); color: var(--e-tekst); text-align: left; cursor: pointer; white-space: nowrap;
+}
+.vf-meny__valg:hover, .vf-meny__valg:focus-visible, .vf-meny__valg[aria-expanded="true"] { background: var(--e-gra); outline: none; }
+.vf-meny__valg:focus-visible { box-shadow: inset 0 0 0 2px var(--e-lenke); }
+.vf-meny__pil { margin-left: auto; font-size: 1.125rem; line-height: 1; color: var(--e-sekundaer); }
+
+.vf-meny__under { position: relative; }
+.vf-meny--under { display: none; left: calc(100% - 4px); top: -5px; }
+.vf-meny__under:hover > .vf-meny--under,
+.vf-meny__under:focus-within > .vf-meny--under,
+.vf-meny__under.er-apen > .vf-meny--under { display: flex; }
+
+/* Tett tabell uten sidelengs rulling */
+.vf-tabell th, .vf-tabell td { padding-left: 6px; padding-right: 6px; }
+.vf-tabell th { white-space: normal; line-height: 1.25; }
+.vf-tabell .e-input--s { width: 8rem; }
+.vf-tabell .e-input--xs { width: 3.5rem; }
+.vf-tabell .og-sel--bred { min-width: 8rem; }
+.vf-tabell .e-belop { min-width: 7.5rem; }
+.vf-tabell .e-belop input { width: 100%; min-width: 5.5rem; }
+
+/* Etasjen: navn og handlinger */
+.vf-etasjetopp { gap: var(--space-2, 8px) var(--space-4, 16px); }
+.vf-etasjetopp .e-input.vf-navnefelt { width: 16rem; }
+.vf-etasjeknapper { display: flex; flex-wrap: wrap; gap: 4px; }
+.vf-etasjeknapper .e-knapp { gap: 6px; min-height: 36px; padding-block: 4px; font-size: var(--text-sm, 0.9375rem); }
+.vf-etasjeknapper svg { width: 18px; height: 18px; }

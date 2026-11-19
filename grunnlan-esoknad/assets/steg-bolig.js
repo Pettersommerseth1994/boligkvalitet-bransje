@@ -131,10 +131,11 @@ STEG.boligkvaliteter = {
       ${F.gruppefeil('minstEnBoenhet')}
       ${S.oppgPakker(pf) && !ogKlar(S.oppg(pf)) ? '' : `<h2 class="e-h2 e-mt">Antall boenheter i prosjektet</h2>
       <table class="e-tabell e-tabell--enkel" style="max-width:32rem"><tbody>
-        ${S.boligsosialt(pf) || S.er(pf, 'OMBYGGING') ? '' : `
-          <tr><td>Boenheter med i låneutmåling</td><td></td><td class="e-tall">${med}</td></tr>
-          <tr><td>Boenheter ikke med i låneutmåling</td><td class="e-senter">+</td><td class="e-tall">${aktive.length - med}</td></tr>`}
-        <tr class="e-tabell__sum"><td>Totalt antall boliger</td><td class="e-senter">=</td><td class="e-tall">${aktive.length || ''}</td></tr>
+        ${S.boligsosialt(pf) || S.er(pf, 'OMBYGGING')
+          ? `<tr class="e-tabell__sum"><td>Totalt antall boliger</td><td class="e-senter">=</td><td class="e-tall">${aktive.length || ''}</td></tr>`
+          : `<tr><td>Totalt antall boliger</td><td></td><td class="e-tall">${aktive.length}</td></tr>
+          <tr><td>Boenheter ikke med i låneutmåling</td><td class="e-senter">−</td><td class="e-tall">${aktive.length - med}</td></tr>
+          <tr class="e-tabell__sum"><td>Boenheter med i låneutmåling</td><td class="e-senter">=</td><td class="e-tall">${med}</td></tr>`}
       </tbody></table>`}
       ${F.sammendrag()}
       ${W.knapper()}
