@@ -109,6 +109,8 @@ STEG.boligkvaliteter = {
   tegn: pf => {
     const a = B.visA(pf); const d = B.visD(pf);
     const aktive = S.aktiveBoenheter(pf);
+    const valgteAdr = new Set(S.alleValgteAdresser(pf).map(x => x.a.id));
+    const alle = (pf.boenheter || []).filter(f => valgteAdr.has(f.adresseId)).length;
     const med = aktive.filter(fo => {
       const x = S.alleValgteAdresser(pf).find(y => y.a.id === fo.adresseId);
       return !x || !S.utmalingsvarsel(pf, x.b, x.a, fo);
@@ -133,8 +135,8 @@ STEG.boligkvaliteter = {
       <table class="e-tabell e-tabell--enkel" style="max-width:32rem"><tbody>
         ${S.boligsosialt(pf) || S.er(pf, 'OMBYGGING')
           ? `<tr class="e-tabell__sum"><td>Totalt antall boliger</td><td class="e-senter">=</td><td class="e-tall">${aktive.length || ''}</td></tr>`
-          : `<tr><td>Totalt antall boliger</td><td></td><td class="e-tall">${aktive.length}</td></tr>
-          <tr><td>Boenheter ikke med i låneutmåling</td><td class="e-senter">−</td><td class="e-tall">${aktive.length - med}</td></tr>
+          : `<tr><td>Totalt antall boliger</td><td></td><td class="e-tall">${alle}</td></tr>
+          <tr><td>Boenheter ikke med i låneutmåling</td><td class="e-senter">−</td><td class="e-tall">${alle - med}</td></tr>
           <tr class="e-tabell__sum"><td>Boenheter med i låneutmåling</td><td class="e-senter">=</td><td class="e-tall">${med}</td></tr>`}
       </tbody></table>`}
       ${F.sammendrag()}
