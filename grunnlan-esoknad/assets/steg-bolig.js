@@ -255,7 +255,7 @@ STEG.boligkvaliteter = {
     ogLeggPakke: (d, pf) => { pf.oppg.pakker.push({ id: Math.max(...pf.oppg.pakker.map(x => x.id)) + 1 }); },
     ogSlettPakke: async (d, pf) => {
       const j = Number(d.j);
-      const ok = await eBekreft({ tittel: 'Bekreft sletting', tekst: `Er du sikker på at du vil slette <b>pakke ${j + 1}</b>? Boenhetene som har pakken, må få en ny.`, bekreft: 'Slett', destruktiv: true });
+      const ok = await eBekreft({ tittel: 'Bekreft sletting', tekst: `Er du sikker på at du vil slette <b>${eEsc(ogPakkeTittel(pf.oppg.pakker[j], j))}</b>? Boenhetene som har pakken, må få en ny.`, bekreft: 'Slett', destruktiv: true });
       if (!ok) return false;
       const [x] = pf.oppg.pakker.splice(j, 1);
       pf.boenheter.forEach(fo => { if (fo.pakke === x.id) delete fo.pakke; });
@@ -545,7 +545,7 @@ function adresseBlokk(pf, e, b, a) {
       return `<div class="og-adressevalg"><div class="e-felt"><label class="e-felt__label" for="${F.id(`massePakke.a${a.id}`)}">Gi de avkryssede boenhetene på adressen</label>
         <select class="e-select og-sel og-sel--bred" id="${F.id(`massePakke.a${a.id}`)}" data-felt="massePakke.a${a.id}" data-type="velg">
           <option value="" disabled ${v ? '' : 'selected'}>Velg pakke</option>
-          ${pf.oppg.pakker.map((x, j) => `<option value="${x.id}" ${String(v) === String(x.id) ? 'selected' : ''}>Pakke ${j + 1}</option>`).join('')}
+          ${pf.oppg.pakker.map((x, j) => `<option value="${x.id}" ${String(v) === String(x.id) ? 'selected' : ''}>${eEsc(ogPakkeTittel(x, j))}</option>`).join('')}
         </select></div>
         <button type="button" class="e-knapp" data-handling="ogBrukPakke" data-aid="${a.id}" ${n ? '' : 'disabled'}>Bruk på avkryssede (${n})</button></div>`;
     })() : ''}
@@ -602,7 +602,7 @@ function etasjeBlokk(pf, b, a, etasje, kanLegge) {
       const x = o.pakker.find(y => y.id === fo.pakke);
       inp = `<div class="og-pakkecelle"><select class="e-select og-sel og-sel--bred${feilKl}" id="${F.id(p)}" data-felt="${p}" data-type="velg" ${av} aria-label="Oppgraderingspakke for ${fo.etasje}${fo.bruksenhetsNr}">
         <option value="" disabled ${x ? '' : 'selected'}>Velg pakke</option>
-        ${o.pakker.map((y, j) => `<option value="${y.id}" ${x === y ? 'selected' : ''}>Pakke ${j + 1}</option>`).join('')}</select>
+        ${o.pakker.map((y, j) => `<option value="${y.id}" ${x === y ? 'selected' : ''}>${eEsc(ogPakkeTittel(y, j))}</option>`).join('')}</select>
         ${x && fo.enabled ? (() => {
     const n = (x.tiltak || []).length;
     return `<span class="e-liten e-sekundaer">${ogKarakter(o) && x.fore && x.etter ? `${x.fore} → ${x.etter} · ` : ''}${n} tiltak</span>`;

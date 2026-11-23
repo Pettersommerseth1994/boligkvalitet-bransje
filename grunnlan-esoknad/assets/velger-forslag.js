@@ -44,7 +44,7 @@ function vfPakkeSelect(pf, fo) {
   const x = pf.oppg.pakker.find(y => y.id === fo.pakke);
   return `<td data-feltboks="${p}"><div class="og-pakkecelle"><select class="e-select og-sel og-sel--bred${F.harFeil(p) ? ' er-feil' : ''}" id="${F.id(p)}" data-felt="${p}" data-type="velg" ${fo.enabled ? '' : 'disabled'} aria-label="Oppgraderingspakke for ${vfNavn(fo)}">
     <option value="" disabled ${x ? '' : 'selected'}>Velg pakke</option>
-    ${pf.oppg.pakker.map((y, j) => `<option value="${y.id}" ${x === y ? 'selected' : ''}>Pakke ${j + 1}</option>`).join('')}</select></div>${fo.enabled ? F.feilHtml(p) : ''}</td>`;
+    ${pf.oppg.pakker.map((y, j) => `<option value="${y.id}" ${x === y ? 'selected' : ''}>${eEsc(ogPakkeTittel(y, j))}</option>`).join('')}</select></div>${fo.enabled ? F.feilHtml(p) : ''}</td>`;
 }
 
 const vfVelgBoks = fo => `<input type="checkbox" class="vf-velg" data-handling="vfVelg" data-id="${fo.id}" ${VF.valgt.has(fo.id) ? 'checked' : ''} aria-label="Marker ${vfNavn(fo)}">`;
@@ -100,7 +100,7 @@ function vfMerkSom(pf) {
       <button type="button" class="vf-pille" data-handling="vfMeny" aria-haspopup="menu" aria-expanded="${apen}">Marker som ${E_IKON.pilNed}</button>
       ${apen ? `<div class="vf-meny" role="menu" aria-label="Marker som">
         ${under('utmaling', 'Låneutmåling', `${valg('Med', 'data-hva="med"')}${valg('Ikke med', 'data-hva="ut"')}`)}
-        ${under('pakke', 'Tilknytt pakke', pf.oppg.pakker.map((x, j) => valg(`Pakke ${j + 1}`, `data-hva="pakke" data-pakke="${x.id}"`)).join(''))}
+        ${under('pakke', 'Tilknytt pakke', pf.oppg.pakker.map((x, j) => valg(eEsc(ogPakkeTittel(x, j)), `data-hva="pakke" data-pakke="${x.id}"`)).join(''))}
       </div>` : ''}
     </div>
     <button type="button" class="vf-pille vf-pille--lys" data-handling="vfFjernValg">Fjern markering</button>
@@ -156,7 +156,7 @@ function vfEtasje(pf, a, etasje, kanLegge) {
   </div>`;
 }
 
-function vfNavneModal(navn) {
+function vfNavneModal(navn, { etikett = 'Navn på etasjen', feil = 'Du må skrive navn på etasjen.' } = {}) {
   return new Promise(resolve => {
     const d = document.createElement('dialog');
     d.className = 'e-modal';
@@ -167,7 +167,7 @@ function vfNavneModal(navn) {
           <button type="button" class="e-knapp e-knapp--ikon" data-svar="nei" aria-label="Lukk">${E_IKON.kryss}</button></div>
         <div class="e-modal__kropp">
           <div class="e-felt">
-            <label class="e-felt__label" for="vf-navn-felt">Navn på etasjen</label>
+            <label class="e-felt__label" for="vf-navn-felt">${etikett}</label>
             <input class="e-input" id="vf-navn-felt" maxlength="40" value="${eEsc(navn)}" aria-describedby="vf-navn-feil">
             <div id="vf-navn-feil"></div>
           </div>
@@ -188,7 +188,7 @@ function vfNavneModal(navn) {
       if (!v) {
         felt.classList.add('er-feil');
         felt.setAttribute('aria-invalid', 'true');
-        d.querySelector('#vf-navn-feil').innerHTML = `<div class="e-feilmelding">${E_IKON.feil}<span>Du må skrive navn på etasjen.</span></div>`;
+        d.querySelector('#vf-navn-feil').innerHTML = `<div class="e-feilmelding">${E_IKON.feil}<span>${feil}</span></div>`;
         felt.focus();
         return;
       }
@@ -230,6 +230,13 @@ function vfNavneModal(navn) {
     vfFjernValg: () => { VF.valgt.clear(); lukk(); },
     vfUnder: d => { VF.under = VF.under === d.under ? null : d.under; },
     vfMeny: () => { const varApen = VF.meny; lukk(); VF.meny = !varApen; },
+    ogEndrePakkenavn: async (d, pf) => {
+      const j = Number(d.j);
+      const x = pf.oppg.pakker[j];
+      const nytt = await vfNavneModal(ogPakkeTittel(x, j), { etikett: 'Navn på pakken', feil: 'Du må skrive navn på pakken.' });
+      if (nytt == null) return false;
+      x.navn = nytt;
+    },
     vfEtMeny: d => { const n = `${d.aid}|${d.etasje}`; VF.etMeny = VF.etMeny === n ? null : n; },
     vfEndreNavn: async (d, pf) => {
       VF.etMeny = null;
@@ -263,6 +270,27 @@ function vfNavneModal(navn) {
     steg.handlinger[h] = (d, pf, e) => { VF.etMeny = null; return org(d, pf, e); };
   });
 
+  const visNy = el => {
+    if (!el) return;
+    const r = el.getBoundingClientRect();
+    if (r.top >= 80 && r.bottom <= innerHeight - 140) return;
+    const rolig = matchMedia('(prefers-reduced-motion: reduce)').matches;
+    el.scrollIntoView({ behavior: rolig ? 'auto' : 'smooth', block: 'center' });
+  };
+
+  const orgLeggPakke = steg.handlinger.ogLeggPakke;
+  steg.handlinger.ogLeggPakke = (d, pf, e) => {
+    const svar = orgLeggPakke(d, pf, e);
+    setTimeout(() => {
+      const knapp = document.querySelector('[data-handling="ogLeggPakke"]');
+      const kort = knapp && knapp.closest('p').previousElementSibling;
+      if (!kort || !kort.classList.contains('e-kort')) return;
+      kort.classList.add('vf-ny');
+      visNy(kort);
+    }, 0);
+    return svar;
+  };
+
   ['kopierEtasje', 'leggTilSammeEtasje', 'kopierBoenhet', 'leggTilBoenhet'].forEach(h => {
     const org = steg.handlinger[h];
     steg.handlinger[h] = (d, pf, e) => {
@@ -274,14 +302,7 @@ function vfNavneModal(navn) {
       const etasjer = new Set(nye.map(f => `${f.adresseId}|${f.etasje}`).filter(k => !forEtasjer.has(k)));
       const rader = new Set(nye.filter(f => !etasjer.has(`${f.adresseId}|${f.etasje}`)).map(f => f.id));
       VF.ny = { etasjer, rader, til: Date.now() + 1200 };
-      setTimeout(() => {
-        const el = document.querySelector('.e-etasje.vf-ny, tr.vf-ny');
-        if (!el) return;
-        const r = el.getBoundingClientRect();
-        if (r.top >= 80 && r.bottom <= innerHeight - 140) return;
-        const rolig = matchMedia('(prefers-reduced-motion: reduce)').matches;
-        el.scrollIntoView({ behavior: rolig ? 'auto' : 'smooth', block: 'center' });
-      }, 0);
+      setTimeout(() => visNy(document.querySelector('.e-etasje.vf-ny, tr.vf-ny')), 0);
       return svar;
     };
   });

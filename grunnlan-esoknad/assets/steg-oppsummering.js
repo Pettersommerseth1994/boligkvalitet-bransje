@@ -219,7 +219,7 @@ function kortBoenheter(pf) {
       ${ogEnergi(o) && o.energivei === 'PROSENT' ? OP.rad('Forventet energibesparelse', o.besparelse ? `${eEsc(o.besparelse)} prosent` : null) : ''}</dl>
     ${ogKlar(o) ? `<h3 class="e-h3">Oppgraderingspakker</h3>
       <div class="e-tabell-rulle"><table class="e-tabell" style="margin-bottom:var(--space-5)"><thead><tr><th>Pakke</th>${ogKarakter(o) ? '<th>Energikarakter</th>' : ''}<th>Tiltak</th><th class="e-tall">Boenheter</th></tr></thead><tbody>
-      ${(o.pakker || []).map((x, j) => `<tr><td>Pakke ${j + 1}</td>${ogKarakter(o) ? `<td>${x.fore && x.etter ? `${x.fore} → ${x.etter}` : ''}</td>` : ''}<td>${ogTiltakTekst(o, x)}</td>
+      ${(o.pakker || []).map((x, j) => `<tr><td>${eEsc(ogPakkeTittel(x, j))}</td>${ogKarakter(o) ? `<td>${x.fore && x.etter ? `${x.fore} → ${x.etter}` : ''}</td>` : ''}<td>${ogTiltakTekst(o, x)}</td>
         <td class="e-tall">${S.aktiveBoenheter(pf).filter(fo => fo.pakke === x.id).length}</td></tr>`).join('')}</tbody></table></div>` : ''}` : '';
   return OP.kort(pf, { tittel: S.oppgPakker(pf) ? 'Oppgradering og boenheter' : S.visBK(pf) ? 'Kvalitetskrav og boenheter' : 'Boenheter', ikon: 'husStor', steg: 'boligkvaliteter', kropp: `
     ${miljo}${oppgradering}${kvalitetskrav}${tabeller || '<p>Ingen boenheter er lagt til.</p>'}

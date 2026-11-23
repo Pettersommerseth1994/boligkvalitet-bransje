@@ -139,17 +139,19 @@ function ogValgFeil(d, p) {
 }
 
 /* Oppgraderingspakkene: ett kort per pakke med energikarakter og tiltak */
-const ogPakkeNavn = (d, id) => `Pakke ${(d.pakker || []).findIndex(x => x.id === Number(id)) + 1}`;
+const ogPakkeTittel = (x, j) => (x && x.navn) || `Pakke ${j + 1}`;
+const ogPakkeNavn = (d, id) => { const j = (d.pakker || []).findIndex(x => x.id === Number(id)); return ogPakkeTittel(d.pakker[j], j); };
 function ogPakkeKort(d, p, vis) {
   return d.pakker.map((x, j) => {
     const mm = ogManglerFor(d, x);
-    return eKort({ tittel: `Pakke ${j + 1}`, niva: 3, kropp: `
+    const navn = eEsc(ogPakkeTittel(x, j));
+    return eKort({ tittel: `${navn}<button type="button" class="e-knapp e-knapp--ikon og-pakkenavn" data-handling="ogEndrePakkenavn" data-j="${j}" title="Endre navn" aria-label="Endre navn på ${navn}">${E_IKON.blyant}</button>`, niva: 3, kropp: `
       ${ogKarakter(d) ? `<div class="e-to">
-        <div class="e-felt" data-feltboks="${p}.pakker.${j}.fore"><label class="e-felt__label" for="${F.id(`${p}.pakker.${j}.fore`)}">Energikarakter før</label>${ogKarakterSelect(`${p}.pakker.${j}.fore`, `Energikarakter før for pakke ${j + 1}`, x.fore)}${ogKrevd(vis, mm.fore)}</div>
-        <div class="e-felt" data-feltboks="${p}.pakker.${j}.etter"><label class="e-felt__label" for="${F.id(`${p}.pakker.${j}.etter`)}">Energikarakter etter</label>${ogKarakterSelect(`${p}.pakker.${j}.etter`, `Energikarakter etter for pakke ${j + 1}`, x.etter)}${ogKrevd(vis, mm.etter)}</div>
+        <div class="e-felt" data-feltboks="${p}.pakker.${j}.fore"><label class="e-felt__label" for="${F.id(`${p}.pakker.${j}.fore`)}">Energikarakter før</label>${ogKarakterSelect(`${p}.pakker.${j}.fore`, `Energikarakter før for ${navn}`, x.fore)}${ogKrevd(vis, mm.fore)}</div>
+        <div class="e-felt" data-feltboks="${p}.pakker.${j}.etter"><label class="e-felt__label" for="${F.id(`${p}.pakker.${j}.etter`)}">Energikarakter etter</label>${ogKarakterSelect(`${p}.pakker.${j}.etter`, `Energikarakter etter for ${navn}`, x.etter)}${ogKrevd(vis, mm.etter)}</div>
       </div>${ogAdv(ogKarakterAdvarsel(x.fore, x.etter))}` : ''}
       <div data-feltboks="${p}.pakker.${j}.tiltak">${ogTiltakVelger(d, `${p}.pakker.${j}`, { label: 'Tiltak' })}${ogKrevd(vis, mm.tiltak || mm.varmepumpe || mm.annet)}</div>`,
-      bunn: d.pakker.length > 1 ? `<button type="button" class="e-knapp e-knapp--subtil-destruktiv" data-handling="ogSlettPakke" data-j="${j}">${E_IKON.soppel}Slett pakke ${j + 1}</button>` : '' });
+      bunn: d.pakker.length > 1 ? `<button type="button" class="e-knapp e-knapp--subtil-destruktiv" data-handling="ogSlettPakke" data-j="${j}">${E_IKON.soppel}Slett ${navn}</button>` : '' });
   }).join('');
 }
 
@@ -157,7 +159,7 @@ function ogPakkeKort(d, p, vis) {
 function ogPakkeFeil(d, p) {
   return (d.pakker || []).flatMap((x, j) => {
     const a = ogKarakter(d) ? ogKarakterAdvarsel(x.fore, x.etter) : '';
-    return [...Object.entries(ogManglerFor(d, x)).map(([k, t]) => ({ nokkel: `${p}.pakker.${j}.${k}`, melding: `Pakke ${j + 1}: ${t}` })),
-      ...(a ? [{ nokkel: `${p}.pakker.${j}.etter`, melding: `Pakke ${j + 1}: ${a}` }] : [])];
+    return [...Object.entries(ogManglerFor(d, x)).map(([k, t]) => ({ nokkel: `${p}.pakker.${j}.${k}`, melding: `${ogPakkeTittel(x, j)}: ${t}` })),
+      ...(a ? [{ nokkel: `${p}.pakker.${j}.etter`, melding: `${ogPakkeTittel(x, j)}: ${a}` }] : [])];
   });
 }
