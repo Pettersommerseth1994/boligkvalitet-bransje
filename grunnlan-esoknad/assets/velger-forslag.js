@@ -130,10 +130,11 @@ function vfEtasje(pf, a, etasje, kanLegge) {
       ${kolonner.slice(0, 3).map(k => vfCelle(pf, fo, k)).join('')}
       ${vfPakkeSelect(pf, fo)}${kolonner.slice(3).map(k => vfCelle(pf, fo, k)).join('')}<td>${vfUtmaling(fo)}</td>`;
     const meny = kanRedigere ? `<td class="e-tabell__handling">${radMeny(fo, kanLegge)}</td>` : '';
-    return `<tr class="${fo.enabled ? '' : 'er-av'}${radFeil ? ' er-feil' : ''}${VF.valgt.has(fo.id) ? ' vf-markert' : ''}">${celler}${meny}</tr>`;
+    return `<tr class="${fo.enabled ? '' : 'er-av'}${radFeil ? ' er-feil' : ''}${VF.valgt.has(fo.id) ? ' vf-markert' : ''}${nyTid && VF.ny.rader.has(fo.id) ? ' vf-ny' : ''}">${celler}${meny}</tr>`;
   };
 
-  const ny = VF.ny && VF.ny.nokkel === nokkel && Date.now() < VF.ny.til;
+  const nyTid = VF.ny && Date.now() < VF.ny.til;
+  const ny = nyTid && VF.ny.etasjer.has(nokkel);
   return `<div class="e-etasje${ny ? ' vf-ny' : ''}" data-vf-etasje="${nokkel}">
     <div class="e-etasje__topp vf-etasjetopp">
       <div class="e-etasje__tittel">
@@ -262,18 +263,28 @@ function vfNavneModal(navn) {
     steg.handlinger[h] = (d, pf, e) => { VF.etMeny = null; return org(d, pf, e); };
   });
 
-  const orgKopier = steg.handlinger.kopierEtasje;
-  steg.handlinger.kopierEtasje = (d, pf, e) => {
-    const nokkel = `${d.aid}|${B.nesteEtasje(pf, Number(d.aid), d.etasje[0])}`;
-    VF.ny = { nokkel, til: Date.now() + 1200 };
-    setTimeout(() => {
-      const el = document.querySelector(`[data-vf-etasje="${nokkel}"]`);
-      if (!el) return;
-      const rolig = matchMedia('(prefers-reduced-motion: reduce)').matches;
-      el.scrollIntoView({ behavior: rolig ? 'auto' : 'smooth', block: 'center' });
-    }, 0);
-    return orgKopier(d, pf, e);
-  };
+  ['kopierEtasje', 'leggTilSammeEtasje', 'kopierBoenhet', 'leggTilBoenhet'].forEach(h => {
+    const org = steg.handlinger[h];
+    steg.handlinger[h] = (d, pf, e) => {
+      const forIder = new Set(pf.boenheter.map(f => f.id));
+      const forEtasjer = new Set(pf.boenheter.map(f => `${f.adresseId}|${f.etasje}`));
+      const svar = org(d, pf, e);
+      const nye = pf.boenheter.filter(f => !forIder.has(f.id));
+      if (!nye.length) return svar;
+      const etasjer = new Set(nye.map(f => `${f.adresseId}|${f.etasje}`).filter(k => !forEtasjer.has(k)));
+      const rader = new Set(nye.filter(f => !etasjer.has(`${f.adresseId}|${f.etasje}`)).map(f => f.id));
+      VF.ny = { etasjer, rader, til: Date.now() + 1200 };
+      setTimeout(() => {
+        const el = document.querySelector('.e-etasje.vf-ny, tr.vf-ny');
+        if (!el) return;
+        const r = el.getBoundingClientRect();
+        if (r.top >= 80 && r.bottom <= innerHeight - 140) return;
+        const rolig = matchMedia('(prefers-reduced-motion: reduce)').matches;
+        el.scrollIntoView({ behavior: rolig ? 'auto' : 'smooth', block: 'center' });
+      }, 0);
+      return svar;
+    };
+  });
 
   document.addEventListener('click', e => {
     if (VF.meny && !e.target.closest('.vf-meny-boks')) { lukk(); F.tegn(); }

@@ -108,9 +108,11 @@
 .vf-handlingslinje .vf-pille:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
 
 
-/* Etasjen som nettopp ble duplisert */
-.e-etasje.vf-ny { border-radius: var(--radius-md, 8px); animation: vf-ny 1.2s ease-out; }
+/* Etasjer og boenheter som nettopp ble lagt til eller duplisert */
+.e-etasje.vf-ny { animation: vf-ny 1.2s ease-out; }
 @keyframes vf-ny { 0%, 60% { background: var(--hb-blue-100); box-shadow: 0 0 0 8px var(--hb-blue-100); } 100% { background: transparent; box-shadow: 0 0 0 8px transparent; } }
+.vf-tabell tr.vf-ny td { animation: vf-ny-rad 1.2s ease-out; }
+@keyframes vf-ny-rad { 0%, 60% { background: var(--hb-blue-100); } }
 .vf-handlingslinje .vf-pille--slett svg { width: 18px; height: 18px; }
 .vf-handlingslinje .vf-pille--slett { background: var(--hb-red-700); }
 .vf-handlingslinje .vf-pille--slett:hover { background: color-mix(in srgb, var(--hb-red-800) 80%, black); }
