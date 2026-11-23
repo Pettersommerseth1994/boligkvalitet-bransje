@@ -6,7 +6,7 @@
    med pakken fra «Merk som»-menyen.
    ────────────────────────────────────────────────────────────────── */
 
-const VF = { valgt: new Set(), meny: false, under: false, etMeny: null };
+const VF = { valgt: new Set(), meny: false, etMeny: null };
 
 const vfEtasjenavn = (pf, aid, etasje) => ((pf.etasjenavn || {})[`${aid}|${etasje}`]) || `Etasje ${etasje}`;
 
@@ -85,22 +85,22 @@ function vfBygg(pf, b) {
 
 function vfMerkSom(pf) {
   const valgte = vfAlleRader(pf).filter(f => VF.valgt.has(f.id));
-  if (!valgte.length) return '';
+  if (!valgte.length) { VF.pilleVist = false; return ''; }
+  const inn = !VF.pilleVist;
+  VF.pilleVist = true;
   const apen = VF.meny;
-  const valg = (hva, tekst, ekstra = '') => `<button type="button" role="menuitem" class="vf-meny__valg" data-handling="vfMerk" data-hva="${hva}" ${ekstra}>${tekst}</button>`;
-  return `<div class="vf-handlingslinje" role="toolbar" aria-label="Handlinger for markerte boenheter">
+  const valg = (tekst, ekstra) => `<button type="button" role="menuitem" class="vf-meny__valg" data-handling="vfMerk" ${ekstra}>${tekst}</button>`;
+  const under = (navn, tittel, innhold) => `<div class="vf-meny__under${VF.under === navn ? ' er-apen' : ''}">
+          <button type="button" role="menuitem" class="vf-meny__valg" data-handling="vfUnder" data-under="${navn}" aria-haspopup="menu" aria-expanded="${VF.under === navn}">${tittel}<span class="vf-meny__pil" aria-hidden="true">›</span></button>
+          <div class="vf-meny vf-meny--under" role="menu" aria-label="${tittel}">${innhold}</div>
+        </div>`;
+  return `<div class="vf-handlingslinje${inn ? ' vf-inn' : ''}" role="toolbar" aria-label="Handlinger for markerte boenheter">
     <span class="vf-antall">${valgte.length} valgt</span>
     <div class="vf-meny-boks">
-      <button type="button" class="vf-pille" data-handling="vfMeny" aria-haspopup="menu" aria-expanded="${apen}">Merk som ${E_IKON.pilNed}</button>
-      ${apen ? `<div class="vf-meny" role="menu">
-        ${valg('med', 'Med i utmålingen')}
-        ${valg('ut', 'Ikke med i utmålingen')}
-        <div class="vf-meny__under${VF.under ? ' er-apen' : ''}">
-          <button type="button" role="menuitem" class="vf-meny__valg" data-handling="vfUnder" aria-haspopup="menu" aria-expanded="${VF.under}">Tilknytt pakke<span class="vf-meny__pil" aria-hidden="true">›</span></button>
-          <div class="vf-meny vf-meny--under" role="menu" aria-label="Tilknytt pakke">
-            ${pf.oppg.pakker.map((x, j) => valg('pakke', `Pakke ${j + 1}`, `data-pakke="${x.id}"`)).join('')}
-          </div>
-        </div>
+      <button type="button" class="vf-pille" data-handling="vfMeny" aria-haspopup="menu" aria-expanded="${apen}">Marker som ${E_IKON.pilNed}</button>
+      ${apen ? `<div class="vf-meny" role="menu" aria-label="Marker som">
+        ${under('utmaling', 'Låneutmåling', `${valg('Med', 'data-hva="med"')}${valg('Ikke med', 'data-hva="ut"')}`)}
+        ${under('pakke', 'Tilknytt pakke', pf.oppg.pakker.map((x, j) => valg(`Pakke ${j + 1}`, `data-hva="pakke" data-pakke="${x.id}"`)).join(''))}
       </div>` : ''}
     </div>
     <button type="button" class="vf-pille vf-pille--lys" data-handling="vfFjernValg">Fjern markering</button>
@@ -121,7 +121,7 @@ function vfEtasje(pf, a, etasje, kanLegge) {
 
   const hode = `<th colspan="2" class="vf-nrhode">Bolignummer</th>
     ${kolonner.slice(0, 3).map(k => `<th>${k.h}</th>`).join('')}
-    <th>Oppgraderingspakke</th>${kolonner.slice(3).map(k => `<th>${k.h}</th>`).join('')}<th>Utmåling</th>`;
+    <th>Oppgraderingspakke</th>${kolonner.slice(3).map(k => `<th>${k.h}</th>`).join('')}<th>Låneutmålingen</th>`;
 
   const rad = fo => {
     const i = B.indeks(pf, fo);
@@ -214,7 +214,7 @@ function vfNavneModal(navn) {
     return `${orgTegn(pf)}${vfAktiv(pf) ? vfMerkSom(pf) : ''}`;
   };
 
-  const lukk = () => { VF.meny = false; VF.under = false; };
+  const lukk = () => { VF.meny = false; VF.under = null; };
 
   Object.assign(steg.handlinger, {
     vfVelg: d => {
@@ -227,8 +227,8 @@ function vfNavneModal(navn) {
       ids.forEach(id => (alle ? VF.valgt.delete(id) : VF.valgt.add(id)));
     },
     vfFjernValg: () => { VF.valgt.clear(); lukk(); },
+    vfUnder: d => { VF.under = VF.under === d.under ? null : d.under; },
     vfMeny: () => { const varApen = VF.meny; lukk(); VF.meny = !varApen; },
-    vfUnder: () => { VF.under = !VF.under; },
     vfEtMeny: d => { const n = `${d.aid}|${d.etasje}`; VF.etMeny = VF.etMeny === n ? null : n; },
     vfEndreNavn: async (d, pf) => {
       VF.etMeny = null;
@@ -282,7 +282,7 @@ function vfNavneModal(navn) {
   document.addEventListener('keydown', e => {
     if (e.key === 'Escape' && VF.etMeny) { VF.etMeny = null; F.tegn(); return; }
     if (e.key !== 'Escape' || !VF.meny) return;
-    if (VF.under) VF.under = false; else lukk();
+    if (VF.under) VF.under = null; else lukk();
     F.tegn();
   });
 })();

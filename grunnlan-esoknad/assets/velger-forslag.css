@@ -112,4 +112,11 @@
 .e-etasje.vf-ny { border-radius: var(--radius-md, 8px); animation: vf-ny 1.2s ease-out; }
 @keyframes vf-ny { 0%, 60% { background: var(--hb-blue-100); box-shadow: 0 0 0 8px var(--hb-blue-100); } 100% { background: transparent; box-shadow: 0 0 0 8px transparent; } }
 .vf-handlingslinje .vf-pille--slett svg { width: 18px; height: 18px; }
-.vf-handlingslinje .vf-pille--slett:hover { background: var(--hb-red-700); }
+.vf-handlingslinje .vf-pille--slett { background: var(--hb-red-700); }
+.vf-handlingslinje .vf-pille--slett:hover { background: color-mix(in srgb, var(--hb-red-800) 80%, black); }
+.vf-meny:hover > .vf-meny__under.er-apen:not(:hover) > .vf-meny--under { display: none; }
+
+@media (prefers-reduced-motion: no-preference) {
+  .vf-handlingslinje.vf-inn { animation: vf-pille-inn .25s cubic-bezier(.2, .8, .2, 1); }
+  @keyframes vf-pille-inn { from { opacity: 0; transform: translate(-50%, 24px); } to { opacity: 1; transform: translate(-50%, 0); } }
+}
