@@ -6,7 +6,7 @@
    med pakken fra «Merk som»-menyen.
    ────────────────────────────────────────────────────────────────── */
 
-const VF = { valgt: new Set(), meny: null, under: false, etMeny: null };
+const VF = { valgt: new Set(), meny: false, under: false, etMeny: null };
 
 const vfEtasjenavn = (pf, aid, etasje) => ((pf.etasjenavn || {})[`${aid}|${etasje}`]) || `Etasje ${etasje}`;
 
@@ -72,6 +72,7 @@ function vfAdresse(pf, e, b, a) {
 }
 
 const vfByggRader = (pf, b) => S.valgteAdresser(b).flatMap(a => S.boenheter(pf, a.id));
+const vfAlleRader = pf => S.alleValgteBygg(pf).flatMap(x => vfByggRader(pf, x.b));
 
 function vfBygg(pf, b) {
   const rader = vfByggRader(pf, b);
@@ -79,19 +80,18 @@ function vfBygg(pf, b) {
   return `<div class="vf-bygg">
       <h2 class="e-h2">${eEsc(S.byggNavn(b))}</h2>
       ${rader.length ? `<button type="button" class="e-knapp e-knapp--subtil" data-handling="vfVelgAlle" data-ids="${rader.map(f => f.id).join(',')}">${alle ? 'Fjern markering' : 'Marker alle'}</button>` : ''}
-    </div>
-    ${vfMerkSom(pf, b, rader)}`;
+    </div>`;
 }
 
-function vfMerkSom(pf, b, rader) {
-  const valgte = rader.filter(f => VF.valgt.has(f.id));
+function vfMerkSom(pf) {
+  const valgte = vfAlleRader(pf).filter(f => VF.valgt.has(f.id));
   if (!valgte.length) return '';
-  const apen = VF.meny === b.id;
-  const valg = (hva, tekst, ekstra = '') => `<button type="button" role="menuitem" class="vf-meny__valg" data-handling="vfMerk" data-bid="${b.id}" data-hva="${hva}" ${ekstra}>${tekst}</button>`;
+  const apen = VF.meny;
+  const valg = (hva, tekst, ekstra = '') => `<button type="button" role="menuitem" class="vf-meny__valg" data-handling="vfMerk" data-hva="${hva}" ${ekstra}>${tekst}</button>`;
   return `<div class="vf-handlingslinje" role="toolbar" aria-label="Handlinger for markerte boenheter">
     <span class="vf-antall">${valgte.length} valgt</span>
     <div class="vf-meny-boks">
-      <button type="button" class="vf-pille" data-handling="vfMeny" data-bid="${b.id}" aria-haspopup="menu" aria-expanded="${apen}">Merk som ${E_IKON.pilNed}</button>
+      <button type="button" class="vf-pille" data-handling="vfMeny" aria-haspopup="menu" aria-expanded="${apen}">Merk som ${E_IKON.pilNed}</button>
       ${apen ? `<div class="vf-meny" role="menu">
         ${valg('med', 'Med i utmålingen')}
         ${valg('ut', 'Ikke med i utmålingen')}
@@ -103,7 +103,7 @@ function vfMerkSom(pf, b, rader) {
         </div>
       </div>` : ''}
     </div>
-    <button type="button" class="vf-pille vf-pille--lys" data-handling="vfFjernValg" data-bid="${b.id}">Fjern markering</button>
+    <button type="button" class="vf-pille vf-pille--lys" data-handling="vfFjernValg">Fjern markering</button>
   </div>`;
 }
 
@@ -209,11 +209,10 @@ function vfNavneModal(navn) {
   steg.tegn = pf => {
     const ider = new Set(pf.boenheter.map(f => f.id));
     VF.valgt.forEach(id => { if (!ider.has(id)) VF.valgt.delete(id); });
-    return orgTegn(pf);
+    return `${orgTegn(pf)}${vfAktiv(pf) ? vfMerkSom(pf) : ''}`;
   };
 
-  const lukk = () => { VF.meny = null; VF.under = false; };
-  const bygg = (pf, bid) => S.alleValgteBygg(pf).map(x => x.b).find(b => b.id === Number(bid));
+  const lukk = () => { VF.meny = false; VF.under = false; };
 
   Object.assign(steg.handlinger, {
     vfVelg: d => {
@@ -225,8 +224,8 @@ function vfNavneModal(navn) {
       const alle = ids.every(id => VF.valgt.has(id));
       ids.forEach(id => (alle ? VF.valgt.delete(id) : VF.valgt.add(id)));
     },
-    vfFjernValg: (d, pf) => { vfByggRader(pf, bygg(pf, d.bid)).forEach(f => VF.valgt.delete(f.id)); lukk(); },
-    vfMeny: d => { const bid = Number(d.bid); const varApen = VF.meny === bid; lukk(); if (!varApen) VF.meny = bid; },
+    vfFjernValg: () => { VF.valgt.clear(); lukk(); },
+    vfMeny: () => { const varApen = VF.meny; lukk(); VF.meny = !varApen; },
     vfUnder: () => { VF.under = !VF.under; },
     vfEtMeny: d => { const n = `${d.aid}|${d.etasje}`; VF.etMeny = VF.etMeny === n ? null : n; },
     vfEndreNavn: async (d, pf) => {
@@ -237,7 +236,7 @@ function vfNavneModal(navn) {
       pf.etasjenavn = { ...(pf.etasjenavn || {}), [`${d.aid}|${d.etasje}`]: nytt };
     },
     vfMerk: (d, pf) => {
-      const rader = vfByggRader(pf, bygg(pf, d.bid)).filter(f => VF.valgt.has(f.id));
+      const rader = vfAlleRader(pf).filter(f => VF.valgt.has(f.id));
       if (d.hva === 'med') rader.forEach(f => { f.enabled = true; });
       if (d.hva === 'ut') rader.forEach(f => { f.enabled = false; });
       if (d.hva === 'pakke') rader.forEach(f => { f.pakke = Number(d.pakke); f.enabled = true; });

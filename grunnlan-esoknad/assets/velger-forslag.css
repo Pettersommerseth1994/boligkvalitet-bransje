@@ -90,3 +90,20 @@
 .vf-etmeny { margin-left: var(--space-2, 8px); }
 .vf-etmeny .og-meny { left: 0; right: auto; min-width: 12rem; }
 .vf-leggtil { margin: 0; }
+
+/* «Merk som» som flytende pille nederst i vinduet */
+.vf-handlingslinje {
+  position: fixed; left: 50%; bottom: 60px; transform: translateX(-50%); z-index: 40;
+  flex-wrap: nowrap; max-width: calc(100vw - 32px); margin: 0; padding: 8px 8px 8px 20px;
+  border-radius: 999px; background: var(--hb-slate-800); border: 0; color: #fff;
+  box-shadow: 0 10px 30px rgba(0,0,0,.18), 0 2px 6px rgba(0,0,0,.08);
+}
+.vf-handlingslinje .vf-antall { padding-left: 0; white-space: nowrap; }
+.vf-handlingslinje .vf-meny { top: auto; bottom: calc(100% + 8px); }
+.vf-handlingslinje .vf-meny--under { top: auto; bottom: -5px; }
+#steg:has(.vf-handlingslinje) { padding-bottom: 140px; }
+.vf-handlingslinje .vf-pille { background: rgba(255,255,255,.14); color: #fff; }
+.vf-handlingslinje .vf-pille:hover, .vf-handlingslinje .vf-pille[aria-expanded="true"] { background: rgba(255,255,255,.24); }
+.vf-handlingslinje .vf-pille--lys { background: transparent; }
+.vf-handlingslinje .vf-pille:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+
