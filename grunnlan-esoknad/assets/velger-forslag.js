@@ -84,8 +84,7 @@ function vfBygg(pf, b) {
 }
 
 function vfMerkSom(pf) {
-  const alleRader = vfAlleRader(pf);
-  const valgte = alleRader.filter(f => VF.valgt.has(f.id));
+  const valgte = vfAlleRader(pf).filter(f => VF.valgt.has(f.id));
   if (!valgte.length) return '';
   const apen = VF.meny;
   const valg = (hva, tekst, ekstra = '') => `<button type="button" role="menuitem" class="vf-meny__valg" data-handling="vfMerk" data-hva="${hva}" ${ekstra}>${tekst}</button>`;
@@ -104,8 +103,8 @@ function vfMerkSom(pf) {
         </div>
       </div>` : ''}
     </div>
-    ${valgte.length < alleRader.length ? `<button type="button" class="vf-pille vf-pille--lys" data-handling="vfVelgAlle" data-ids="${alleRader.map(f => f.id).join(',')}">Marker alt</button>` : ''}
     <button type="button" class="vf-pille vf-pille--lys" data-handling="vfFjernValg">Fjern markering</button>
+    <button type="button" class="vf-pille vf-pille--lys vf-pille--slett" data-handling="vfSlettMarkerte">${E_IKON.soppel}Slett markerte</button>
   </div>`;
 }
 
@@ -237,6 +236,17 @@ function vfNavneModal(navn) {
       const nytt = await vfNavneModal(vfEtasjenavn(pf, Number(d.aid), d.etasje));
       if (nytt == null) return false;
       pf.etasjenavn = { ...(pf.etasjenavn || {}), [`${d.aid}|${d.etasje}`]: nytt };
+    },
+    vfSlettMarkerte: async (d, pf) => {
+      lukk();
+      const rader = vfAlleRader(pf).filter(f => VF.valgt.has(f.id));
+      if (!rader.length) return false;
+      const tekst = rader.length === 1 ? 'den markerte boenheten' : `de <b>${rader.length}</b> markerte boenhetene`;
+      const ok = await eBekreft({ tittel: 'Slett boenheter', tekst: `Er du sikker på at du vil slette ${tekst}?`, bekreft: 'Slett', destruktiv: true });
+      if (!ok) return true;
+      const ider = new Set(rader.map(f => f.id));
+      pf.boenheter = pf.boenheter.filter(f => !ider.has(f.id));
+      VF.valgt.clear();
     },
     vfMerk: (d, pf) => {
       const rader = vfAlleRader(pf).filter(f => VF.valgt.has(f.id));
