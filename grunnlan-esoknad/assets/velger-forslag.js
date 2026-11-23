@@ -6,7 +6,7 @@
    med pakken fra «Merk som»-menyen.
    ────────────────────────────────────────────────────────────────── */
 
-const VF = { valgt: new Set(), meny: null, under: false, navn: null };
+const VF = { valgt: new Set(), meny: null, under: false, etMeny: null };
 
 const vfEtasjenavn = (pf, aid, etasje) => ((pf.etasjenavn || {})[`${aid}|${etasje}`]) || `Etasje ${etasje}`;
 
@@ -49,12 +49,6 @@ function vfPakkeSelect(pf, fo) {
 
 const vfVelgBoks = fo => `<input type="checkbox" class="vf-velg" data-handling="vfVelg" data-id="${fo.id}" ${VF.valgt.has(fo.id) ? 'checked' : ''} aria-label="Marker ${vfNavn(fo)}">`;
 
-function vfAlleBoks(rader, etikett) {
-  const n = rader.filter(f => VF.valgt.has(f.id)).length;
-  const tilstand = n === 0 ? '' : n === rader.length ? 'checked' : 'data-delvis="1"';
-  return `<input type="checkbox" class="vf-velg" data-handling="vfVelgAlle" data-ids="${rader.map(f => f.id).join(',')}" ${tilstand} aria-label="${etikett}">`;
-}
-
 /* ═══ Adressen ════════════════════════════════════════════════════ */
 
 function vfAdresse(pf, e, b, a) {
@@ -65,12 +59,12 @@ function vfAdresse(pf, e, b, a) {
   const kropp = `
     ${F.visFeil && !rader.some(r => r.enabled) ? eCallout('feil', '<p>Du må velge minst en bolig for denne adressen eller fjerne den.</p>') : ''}
     ${F.gruppefeil(`adresse-${a.id}`)}
-    ${etasjer.map(et => vfEtasje(pf, a, et, kanLegge)).join('')}`;
+    ${etasjer.map(et => vfEtasje(pf, a, et, kanLegge)).join('')}
+    <p class="vf-leggtil"><button type="button" class="e-knapp" data-handling="leggTilSammeEtasje" data-aid="${a.id}" data-etasje="H00">${E_IKON.pluss}Legg til etasje</button></p>`;
   const nokkel = `adresse-${a.id}`;
   const apen = !F.lukket.has(nokkel);
   return `<div class="e-trekk e-trekk--inni vf-trekk">
     <div class="vf-trekk__rad">
-      <span class="vf-boksplass">${vfAlleBoks(rader, `Marker alle på ${eEsc(S.adresseTekst(a))}`)}</span>
       <button type="button" class="e-trekk__topp" data-trekk="${eEsc(nokkel)}" aria-expanded="${apen}" aria-controls="${F.id(`t-${nokkel}`)}"><span>${tittel}</span>${E_IKON.pilNed}</button>
     </div>
     <div class="e-trekk__kropp" id="${F.id(`t-${nokkel}`)}"${apen ? '' : ' hidden'}>${kropp}</div>
@@ -119,7 +113,8 @@ function vfEtasje(pf, a, etasje, kanLegge) {
   const rader = S.boenheter(pf, a.id).filter(f => f.etasje === etasje).sort((x, y) => Number(x.bruksenhetsNr) - Number(y.bruksenhetsNr));
   const kolonner = vfKolonner(pf);
   const kanRedigere = S.kanLeggeTilBoliger(pf);
-  const rediger = VF.navn && VF.navn.aid === a.id && VF.navn.etasje === etasje;
+  const nokkel = `${a.id}|${etasje}`;
+  const menyApen = VF.etMeny === nokkel;
   const navn = vfEtasjenavn(pf, a.id, etasje);
   const ds = `data-aid="${a.id}" data-etasje="${etasje}"`;
 
@@ -140,24 +135,65 @@ function vfEtasje(pf, a, etasje, kanLegge) {
   return `<div class="e-etasje">
     <div class="e-etasje__topp vf-etasjetopp">
       <div class="e-etasje__tittel">
-        <span class="vf-boksplass">${vfAlleBoks(rader, `Marker alle i ${navn}`)}</span>
-        ${rediger ? `<input class="e-input vf-navnefelt" id="vf-etasjenavn" maxlength="40" value="${eEsc(VF.navn.verdi)}" aria-label="Navn på etasjen">
-          <button type="button" class="e-knapp e-knapp--ikon" data-handling="vfLagreNavn" title="Bekreft" aria-label="Bekreft">${E_IKON.sjekk}</button>
-          <button type="button" class="e-knapp e-knapp--ikon" data-handling="vfAvbrytNavn" title="Avbryt redigering" aria-label="Avbryt redigering">${E_IKON.kryss}</button>`
-    : `${eEsc(navn)}<button type="button" class="e-knapp e-knapp--ikon" data-handling="vfRedigerNavn" ${ds} title="Endre navn" aria-label="Endre navn på ${eEsc(navn)}">${E_IKON.blyant}</button>`}
-      </div>
-      <div class="vf-etasjeknapper">
-        <button type="button" class="e-knapp e-knapp--subtil" data-handling="leggTilSammeEtasje" ${ds}>${E_IKON.pluss}Legg til</button>
-        <button type="button" class="e-knapp e-knapp--subtil" data-handling="kopierEtasje" ${ds}>${E_IKON.kopier}Dupliser</button>
-        <button type="button" class="e-knapp e-knapp--subtil-destruktiv" data-handling="slettEtasje" ${ds}>${E_IKON.soppel}Slett</button>
+        ${eEsc(navn)}
+        <div class="og-meny-boks vf-etmeny">
+          <button type="button" class="e-knapp e-knapp--ikon og-prikker" data-handling="vfEtMeny" ${ds} aria-haspopup="menu" aria-expanded="${menyApen}" aria-label="Flere valg for ${eEsc(navn)}">⋯</button>
+          ${menyApen ? `<div class="og-meny" role="menu" aria-label="Valg for ${eEsc(navn)}">
+            <button type="button" role="menuitem" class="og-meny__valg" data-handling="vfEndreNavn" ${ds}>${E_IKON.blyant}Endre navn</button>
+            <button type="button" role="menuitem" class="og-meny__valg" data-handling="kopierEtasje" ${ds}>${E_IKON.kopier}Dupliser</button>
+            <button type="button" role="menuitem" class="og-meny__valg og-meny__valg--slett" data-handling="slettEtasje" ${ds}>${E_IKON.soppel}Slett</button>
+          </div>` : ''}
+        </div>
       </div>
     </div>
-    ${rediger && VF.navn.feil ? `<div class="e-feilmelding">${E_IKON.feil}<span>${VF.navn.feil}</span></div>` : ''}
     <div class="e-tabell-rulle"><table class="e-tabell vf-tabell">
       <thead><tr>${hode}${kanRedigere ? '<th><span class="e-sr">Valg</span></th>' : ''}</tr></thead>
       <tbody>${rader.map(rad).join('')}</tbody>
     </table></div>
   </div>`;
+}
+
+function vfNavneModal(navn) {
+  return new Promise(resolve => {
+    const d = document.createElement('dialog');
+    d.className = 'e-modal';
+    d.setAttribute('aria-labelledby', 'vf-navn-tittel');
+    d.innerHTML = `
+      <form method="dialog" novalidate>
+        <div class="e-modal__topp"><h2 id="vf-navn-tittel">Endre navn</h2>
+          <button type="button" class="e-knapp e-knapp--ikon" data-svar="nei" aria-label="Lukk">${E_IKON.kryss}</button></div>
+        <div class="e-modal__kropp">
+          <div class="e-felt">
+            <label class="e-felt__label" for="vf-navn-felt">Navn på etasjen</label>
+            <input class="e-input" id="vf-navn-felt" maxlength="40" value="${eEsc(navn)}" aria-describedby="vf-navn-feil">
+            <div id="vf-navn-feil"></div>
+          </div>
+        </div>
+        <div class="e-modal__bunn">
+          <button type="submit" class="e-knapp e-knapp--prominent">Lagre</button>
+          <button type="button" class="e-knapp" data-svar="nei">Avbryt</button>
+        </div>
+      </form>`;
+    document.body.appendChild(d);
+    const felt = d.querySelector('#vf-navn-felt');
+    const lukk = svar => { d.close(); d.remove(); resolve(svar); };
+    d.addEventListener('click', e => { if (e.target.closest('[data-svar="nei"]')) lukk(null); });
+    d.addEventListener('cancel', e => { e.preventDefault(); lukk(null); });
+    d.querySelector('form').addEventListener('submit', e => {
+      e.preventDefault();
+      const v = felt.value.trim();
+      if (!v) {
+        felt.classList.add('er-feil');
+        felt.setAttribute('aria-invalid', 'true');
+        d.querySelector('#vf-navn-feil').innerHTML = `<div class="e-feilmelding">${E_IKON.feil}<span>Du må skrive navn på etasjen.</span></div>`;
+        felt.focus();
+        return;
+      }
+      lukk(v);
+    });
+    d.showModal();
+    felt.select();
+  });
 }
 
 /* ═══ Kobling til Bolig-steget ════════════════════════════════════ */
@@ -192,14 +228,13 @@ function vfEtasje(pf, a, etasje, kanLegge) {
     vfFjernValg: (d, pf) => { vfByggRader(pf, bygg(pf, d.bid)).forEach(f => VF.valgt.delete(f.id)); lukk(); },
     vfMeny: d => { const bid = Number(d.bid); const varApen = VF.meny === bid; lukk(); if (!varApen) VF.meny = bid; },
     vfUnder: () => { VF.under = !VF.under; },
-    vfRedigerNavn: (d, pf) => { VF.navn = { aid: Number(d.aid), etasje: d.etasje, verdi: vfEtasjenavn(pf, Number(d.aid), d.etasje), feil: '' }; setTimeout(() => { const el = document.getElementById('vf-etasjenavn'); if (el) el.select(); }); },
-    vfAvbrytNavn: () => { VF.navn = null; },
-    vfLagreNavn: (d, pf) => {
-      const n = VF.navn;
-      n.verdi = document.getElementById('vf-etasjenavn').value.trim();
-      if (!n.verdi) { n.feil = 'Du må skrive navn på etasjen.'; return true; }
-      pf.etasjenavn = { ...(pf.etasjenavn || {}), [`${n.aid}|${n.etasje}`]: n.verdi };
-      VF.navn = null;
+    vfEtMeny: d => { const n = `${d.aid}|${d.etasje}`; VF.etMeny = VF.etMeny === n ? null : n; },
+    vfEndreNavn: async (d, pf) => {
+      VF.etMeny = null;
+      F.tegn();
+      const nytt = await vfNavneModal(vfEtasjenavn(pf, Number(d.aid), d.etasje));
+      if (nytt == null) return false;
+      pf.etasjenavn = { ...(pf.etasjenavn || {}), [`${d.aid}|${d.etasje}`]: nytt };
     },
     vfMerk: (d, pf) => {
       const rader = vfByggRader(pf, bygg(pf, d.bid)).filter(f => VF.valgt.has(f.id));
@@ -210,19 +245,19 @@ function vfEtasje(pf, a, etasje, kanLegge) {
     }
   });
 
+  ['leggTilSammeEtasje', 'kopierEtasje', 'slettEtasje'].forEach(h => {
+    const org = steg.handlinger[h];
+    steg.handlinger[h] = (d, pf, e) => { VF.etMeny = null; return org(d, pf, e); };
+  });
+
   document.addEventListener('click', e => {
     if (VF.meny && !e.target.closest('.vf-meny-boks')) { lukk(); F.tegn(); }
+    if (VF.etMeny && !e.target.closest('.vf-etmeny')) { VF.etMeny = null; F.tegn(); }
   });
   document.addEventListener('keydown', e => {
-    if (e.target.id === 'vf-etasjenavn' && (e.key === 'Enter' || e.key === 'Escape')) {
-      e.preventDefault();
-      document.querySelector(`[data-handling=${e.key === 'Enter' ? 'vfLagreNavn' : 'vfAvbrytNavn'}]`).click();
-      return;
-    }
+    if (e.key === 'Escape' && VF.etMeny) { VF.etMeny = null; F.tegn(); return; }
     if (e.key !== 'Escape' || !VF.meny) return;
     if (VF.under) VF.under = false; else lukk();
     F.tegn();
   });
-  new MutationObserver(() => document.querySelectorAll('input[data-delvis]').forEach(el => { el.indeterminate = true; }))
-    .observe(document.body, { childList: true, subtree: true });
 })();

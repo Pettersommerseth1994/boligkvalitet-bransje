@@ -7,8 +7,8 @@
 .vf-nr { font-weight: 500; white-space: nowrap; }
 .vf-tabell tr.vf-markert td { background: var(--e-info); }
 
-.vf-status { display: inline-block; padding: 2px 10px; border-radius: 999px; font-size: 0.875rem; background: var(--e-gra); color: var(--e-sekundaer); white-space: nowrap; }
-.vf-status--med { background: var(--e-positiv); color: var(--e-tekst); font-weight: 600; }
+.vf-status { display: inline-block; padding: 2px 10px; border-radius: 999px; font-size: 0.875rem; font-weight: 600; background: var(--e-feil-bg); color: var(--e-tekst); white-space: nowrap; }
+.vf-status--med { background: var(--e-positiv); }
 
 /* Handlingslinja */
 .vf-handlingslinje {
@@ -65,14 +65,11 @@
 
 /* Avkrysningene står i samme kolonne: adresse, etasje og rader */
 .vf-tabell th:first-child, .vf-tabell td:first-child { width: 20px; padding-left: 6px; padding-right: 6px; }
-.vf-boksplass { flex: 0 0 auto; box-sizing: border-box; width: var(--vf-boks, 44px); display: inline-flex; align-items: center; padding-left: 10px; }
-.vf-boksplass input { width: 20px; height: 20px; margin: 0; accent-color: var(--e-knapp); cursor: pointer; }
-.vf-etasjetopp .e-etasje__tittel { gap: 0; }
+.vf-etasjetopp .e-etasje__tittel { gap: 0; padding-left: 10px; }
 .vf-etasjetopp .e-etasje__tittel > .e-knapp--ikon { margin-left: var(--space-2, 8px); }
 .vf-etasjetopp .vf-navnefelt + .e-knapp--ikon { margin-left: var(--space-2, 8px); }
 .vf-trekk__rad { display: flex; align-items: center; padding-left: var(--space-5, 32px); }
-.vf-trekk__rad .e-trekk__topp { padding-left: 1px; }
-.vf-etasjetopp .vf-boksplass { width: 45px; }
+.vf-trekk__rad .e-trekk__topp { padding-left: 10px; }
 .vf-handlingslinje .vf-antall { padding-left: 4px; }
 .vf-tabell th.vf-nrhode { padding-left: 10px; }
 .vf-handlingslinje { margin-bottom: var(--space-2, 8px); }
@@ -88,3 +85,8 @@
 .vf-tabell th:last-child, .vf-tabell td.e-tabell__handling { width: auto; text-align: right; }
 .vf-tabell .og-pakkecelle { min-width: 0; }
 .vf-tabell td.vf-nr { width: 76px; min-width: 76px; padding-left: 4px; }
+
+/* Menyen på etasjen */
+.vf-etmeny { margin-left: var(--space-2, 8px); }
+.vf-etmeny .og-meny { left: 0; right: auto; min-width: 12rem; }
+.vf-leggtil { margin: 0; }
