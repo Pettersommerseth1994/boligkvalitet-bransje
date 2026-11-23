@@ -52,9 +52,9 @@
 .vf-tabell th { white-space: normal; line-height: 1.25; }
 .vf-tabell .e-input--s { width: 8rem; }
 .vf-tabell .e-input--xs { width: 3.5rem; }
-.vf-tabell .og-sel--bred { min-width: 8rem; }
-.vf-tabell .e-belop { min-width: 7.5rem; }
-.vf-tabell .e-belop input { width: 100%; min-width: 5.5rem; }
+.vf-tabell .og-sel--bred { width: 161px; min-width: 161px; }
+.vf-tabell .e-belop { min-width: 0; }
+.vf-tabell .e-belop input { flex: 0 0 112px; width: 112px; min-width: 0; }
 
 /* Etasjen: navn og handlinger */
 .vf-etasjetopp { gap: var(--space-2, 8px) var(--space-4, 16px); }
@@ -76,3 +76,15 @@
 .vf-handlingslinje .vf-antall { padding-left: 4px; }
 .vf-tabell th.vf-nrhode { padding-left: 10px; }
 .vf-handlingslinje { margin-bottom: var(--space-2, 8px); }
+
+/* Bygget: overskrift med «Marker alle» */
+.vf-bygg { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3, 16px); margin: var(--space-6, 48px) 0 var(--space-3, 16px); }
+.vf-bygg .e-h2 { margin: 0; }
+
+/* Kolonnene får bredden til innholdet og lik avstand. Resten av plassen går til menykolonnen. */
+.vf-tabell th, .vf-tabell td { width: 1%; padding-left: 8px; padding-right: 8px; }
+.vf-tabell th:first-child, .vf-tabell td:first-child { padding-left: 6px; padding-right: 6px; }
+.vf-tabell th.vf-nrhode { padding-left: 10px; }
+.vf-tabell th:last-child, .vf-tabell td.e-tabell__handling { width: auto; text-align: right; }
+.vf-tabell .og-pakkecelle { min-width: 0; }
+.vf-tabell td.vf-nr { width: 76px; min-width: 76px; padding-left: 4px; }

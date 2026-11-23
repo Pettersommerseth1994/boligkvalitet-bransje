@@ -68,7 +68,7 @@ function vfAdresse(pf, e, b, a) {
     ${etasjer.map(et => vfEtasje(pf, a, et, kanLegge)).join('')}`;
   const nokkel = `adresse-${a.id}`;
   const apen = !F.lukket.has(nokkel);
-  return `${vfMerkSom(pf, a, rader)}<div class="e-trekk e-trekk--inni vf-trekk">
+  return `<div class="e-trekk e-trekk--inni vf-trekk">
     <div class="vf-trekk__rad">
       <span class="vf-boksplass">${vfAlleBoks(rader, `Marker alle på ${eEsc(S.adresseTekst(a))}`)}</span>
       <button type="button" class="e-trekk__topp" data-trekk="${eEsc(nokkel)}" aria-expanded="${apen}" aria-controls="${F.id(`t-${nokkel}`)}"><span>${tittel}</span>${E_IKON.pilNed}</button>
@@ -77,15 +77,27 @@ function vfAdresse(pf, e, b, a) {
   </div>`;
 }
 
-function vfMerkSom(pf, a, rader) {
+const vfByggRader = (pf, b) => S.valgteAdresser(b).flatMap(a => S.boenheter(pf, a.id));
+
+function vfBygg(pf, b) {
+  const rader = vfByggRader(pf, b);
+  const alle = rader.length > 0 && rader.every(f => VF.valgt.has(f.id));
+  return `<div class="vf-bygg">
+      <h2 class="e-h2">${eEsc(S.byggNavn(b))}</h2>
+      ${rader.length ? `<button type="button" class="e-knapp e-knapp--subtil" data-handling="vfVelgAlle" data-ids="${rader.map(f => f.id).join(',')}">${alle ? 'Fjern markering' : 'Marker alle'}</button>` : ''}
+    </div>
+    ${vfMerkSom(pf, b, rader)}`;
+}
+
+function vfMerkSom(pf, b, rader) {
   const valgte = rader.filter(f => VF.valgt.has(f.id));
   if (!valgte.length) return '';
-  const apen = VF.meny === a.id;
-  const valg = (hva, tekst, ekstra = '') => `<button type="button" role="menuitem" class="vf-meny__valg" data-handling="vfMerk" data-aid="${a.id}" data-hva="${hva}" ${ekstra}>${tekst}</button>`;
+  const apen = VF.meny === b.id;
+  const valg = (hva, tekst, ekstra = '') => `<button type="button" role="menuitem" class="vf-meny__valg" data-handling="vfMerk" data-bid="${b.id}" data-hva="${hva}" ${ekstra}>${tekst}</button>`;
   return `<div class="vf-handlingslinje" role="toolbar" aria-label="Handlinger for markerte boenheter">
     <span class="vf-antall">${valgte.length} valgt</span>
     <div class="vf-meny-boks">
-      <button type="button" class="vf-pille" data-handling="vfMeny" data-aid="${a.id}" aria-haspopup="menu" aria-expanded="${apen}">Merk som ${E_IKON.pilNed}</button>
+      <button type="button" class="vf-pille" data-handling="vfMeny" data-bid="${b.id}" aria-haspopup="menu" aria-expanded="${apen}">Merk som ${E_IKON.pilNed}</button>
       ${apen ? `<div class="vf-meny" role="menu">
         ${valg('med', 'Med i utmålingen')}
         ${valg('ut', 'Ikke med i utmålingen')}
@@ -97,7 +109,7 @@ function vfMerkSom(pf, a, rader) {
         </div>
       </div>` : ''}
     </div>
-    <button type="button" class="vf-pille vf-pille--lys" data-handling="vfFjernValg" data-aid="${a.id}">Fjern markering</button>
+    <button type="button" class="vf-pille vf-pille--lys" data-handling="vfFjernValg" data-bid="${b.id}">Fjern markering</button>
   </div>`;
 }
 
@@ -113,14 +125,14 @@ function vfEtasje(pf, a, etasje, kanLegge) {
 
   const hode = `<th colspan="2" class="vf-nrhode">Bolignummer</th>
     ${kolonner.slice(0, 3).map(k => `<th>${k.h}</th>`).join('')}
-    <th>Utmåling</th><th>Oppgraderingspakke</th>${kolonner.slice(3).map(k => `<th>${k.h}</th>`).join('')}`;
+    <th>Oppgraderingspakke</th>${kolonner.slice(3).map(k => `<th>${k.h}</th>`).join('')}<th>Utmåling</th>`;
 
   const rad = fo => {
     const i = B.indeks(pf, fo);
     const radFeil = F.visFeil && fo.enabled && F.feilliste.some(x => x.nokkel.startsWith(`boenheter.${i}.`));
     const celler = `<td>${vfVelgBoks(fo)}</td><td class="vf-nr">${vfNavn(fo)}</td>
       ${kolonner.slice(0, 3).map(k => vfCelle(pf, fo, k)).join('')}
-      <td>${vfUtmaling(fo)}</td>${vfPakkeSelect(pf, fo)}${kolonner.slice(3).map(k => vfCelle(pf, fo, k)).join('')}`;
+      ${vfPakkeSelect(pf, fo)}${kolonner.slice(3).map(k => vfCelle(pf, fo, k)).join('')}<td>${vfUtmaling(fo)}</td>`;
     const meny = kanRedigere ? `<td class="e-tabell__handling">${radMeny(fo, kanLegge)}</td>` : '';
     return `<tr class="${fo.enabled ? '' : 'er-av'}${radFeil ? ' er-feil' : ''}${VF.valgt.has(fo.id) ? ' vf-markert' : ''}">${celler}${meny}</tr>`;
   };
@@ -154,6 +166,8 @@ function vfEtasje(pf, a, etasje, kanLegge) {
   const steg = STEG.boligkvaliteter;
   const orgAdresse = adresseBlokk;
   adresseBlokk = (pf, e, b, a) => (vfAktiv(pf) ? vfAdresse(pf, e, b, a) : orgAdresse(pf, e, b, a));
+  const orgBygg = byggOverskrift;
+  byggOverskrift = (pf, b) => (vfAktiv(pf) ? vfBygg(pf, b) : orgBygg(pf, b));
 
   const orgTegn = steg.tegn;
   steg.tegn = pf => {
@@ -163,6 +177,7 @@ function vfEtasje(pf, a, etasje, kanLegge) {
   };
 
   const lukk = () => { VF.meny = null; VF.under = false; };
+  const bygg = (pf, bid) => S.alleValgteBygg(pf).map(x => x.b).find(b => b.id === Number(bid));
 
   Object.assign(steg.handlinger, {
     vfVelg: d => {
@@ -174,8 +189,8 @@ function vfEtasje(pf, a, etasje, kanLegge) {
       const alle = ids.every(id => VF.valgt.has(id));
       ids.forEach(id => (alle ? VF.valgt.delete(id) : VF.valgt.add(id)));
     },
-    vfFjernValg: (d, pf) => { S.boenheter(pf, Number(d.aid)).forEach(f => VF.valgt.delete(f.id)); lukk(); },
-    vfMeny: d => { const aid = Number(d.aid); const varApen = VF.meny === aid; lukk(); if (!varApen) VF.meny = aid; },
+    vfFjernValg: (d, pf) => { vfByggRader(pf, bygg(pf, d.bid)).forEach(f => VF.valgt.delete(f.id)); lukk(); },
+    vfMeny: d => { const bid = Number(d.bid); const varApen = VF.meny === bid; lukk(); if (!varApen) VF.meny = bid; },
     vfUnder: () => { VF.under = !VF.under; },
     vfRedigerNavn: (d, pf) => { VF.navn = { aid: Number(d.aid), etasje: d.etasje, verdi: vfEtasjenavn(pf, Number(d.aid), d.etasje), feil: '' }; setTimeout(() => { const el = document.getElementById('vf-etasjenavn'); if (el) el.select(); }); },
     vfAvbrytNavn: () => { VF.navn = null; },
@@ -187,7 +202,7 @@ function vfEtasje(pf, a, etasje, kanLegge) {
       VF.navn = null;
     },
     vfMerk: (d, pf) => {
-      const rader = S.boenheter(pf, Number(d.aid)).filter(f => VF.valgt.has(f.id));
+      const rader = vfByggRader(pf, bygg(pf, d.bid)).filter(f => VF.valgt.has(f.id));
       if (d.hva === 'med') rader.forEach(f => { f.enabled = true; });
       if (d.hva === 'ut') rader.forEach(f => { f.enabled = false; });
       if (d.hva === 'pakke') rader.forEach(f => { f.pakke = Number(d.pakke); f.enabled = true; });

@@ -64,6 +64,8 @@ const B = {
   meny: null
 };
 
+function byggOverskrift(pf, b) { return `<h2 class="e-h2 e-mt">${eEsc(S.byggNavn(b))}</h2>`; }
+
 STEG.boligkvaliteter = {
   bred: true,
 
@@ -127,7 +129,7 @@ STEG.boligkvaliteter = {
       ${S.oppgPakker(pf) ? blokkOppgradering(pf) : ''}
       ${B.visB(pf) ? blokkEnergikarakter(pf) : ''}
       ${d ? S.alleValgteBygg(pf).map(({ e, b }) => `
-        <h2 class="e-h2 e-mt">${eEsc(S.byggNavn(b))}</h2>
+        ${byggOverskrift(pf, b)}
         ${S.valgteAdresser(b).map(adr => adresseBlokk(pf, e, b, adr)).join('')}`).join('') : ''}
       ${d && !S.alleValgteBygg(pf).length ? eCallout('advarsel', '<p>Du har ikke valgt noen adresser på Eiendom-steget ennå.</p>') : ''}
       ${F.gruppefeil('minstEnBoenhet')}
