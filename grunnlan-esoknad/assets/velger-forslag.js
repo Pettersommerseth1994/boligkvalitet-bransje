@@ -63,11 +63,18 @@ function vfAdresse(pf, e, b, a) {
   const kanLegge = B.kanLeggeTil(pf, b, a);
   const tittel = `${eEsc(S.adresseTekst(a))}${etasjer.length ? `, ${etasjer.length} ${etasjer.length === 1 ? 'etasje' : 'etasjer'}` : ''}`;
   const kropp = `
-    ${vfMerkSom(pf, a, rader)}
     ${F.visFeil && !rader.some(r => r.enabled) ? eCallout('feil', '<p>Du må velge minst en bolig for denne adressen eller fjerne den.</p>') : ''}
     ${F.gruppefeil(`adresse-${a.id}`)}
     ${etasjer.map(et => vfEtasje(pf, a, et, kanLegge)).join('')}`;
-  return F.trekkspill({ nokkel: `adresse-${a.id}`, tittel, kropp, klasse: 'e-trekk--inni' });
+  const nokkel = `adresse-${a.id}`;
+  const apen = !F.lukket.has(nokkel);
+  return `${vfMerkSom(pf, a, rader)}<div class="e-trekk e-trekk--inni vf-trekk">
+    <div class="vf-trekk__rad">
+      <span class="vf-boksplass">${vfAlleBoks(rader, `Marker alle på ${eEsc(S.adresseTekst(a))}`)}</span>
+      <button type="button" class="e-trekk__topp" data-trekk="${eEsc(nokkel)}" aria-expanded="${apen}" aria-controls="${F.id(`t-${nokkel}`)}"><span>${tittel}</span>${E_IKON.pilNed}</button>
+    </div>
+    <div class="e-trekk__kropp" id="${F.id(`t-${nokkel}`)}"${apen ? '' : ' hidden'}>${kropp}</div>
+  </div>`;
 }
 
 function vfMerkSom(pf, a, rader) {
@@ -76,7 +83,7 @@ function vfMerkSom(pf, a, rader) {
   const apen = VF.meny === a.id;
   const valg = (hva, tekst, ekstra = '') => `<button type="button" role="menuitem" class="vf-meny__valg" data-handling="vfMerk" data-aid="${a.id}" data-hva="${hva}" ${ekstra}>${tekst}</button>`;
   return `<div class="vf-handlingslinje" role="toolbar" aria-label="Handlinger for markerte boenheter">
-    <label class="vf-antall">${vfAlleBoks(rader, 'Marker alle på adressen')}<span>${valgte.length} valgt</span></label>
+    <span class="vf-antall">${valgte.length} valgt</span>
     <div class="vf-meny-boks">
       <button type="button" class="vf-pille" data-handling="vfMeny" data-aid="${a.id}" aria-haspopup="menu" aria-expanded="${apen}">Merk som ${E_IKON.pilNed}</button>
       ${apen ? `<div class="vf-meny" role="menu">
@@ -104,7 +111,7 @@ function vfEtasje(pf, a, etasje, kanLegge) {
   const navn = vfEtasjenavn(pf, a.id, etasje);
   const ds = `data-aid="${a.id}" data-etasje="${etasje}"`;
 
-  const hode = `<th>${vfAlleBoks(rader, `Marker alle i etasje ${etasje}`)}</th><th>Bolignummer</th>
+  const hode = `<th colspan="2" class="vf-nrhode">Bolignummer</th>
     ${kolonner.slice(0, 3).map(k => `<th>${k.h}</th>`).join('')}
     <th>Utmåling</th><th>Oppgraderingspakke</th>${kolonner.slice(3).map(k => `<th>${k.h}</th>`).join('')}`;
 
@@ -121,6 +128,7 @@ function vfEtasje(pf, a, etasje, kanLegge) {
   return `<div class="e-etasje">
     <div class="e-etasje__topp vf-etasjetopp">
       <div class="e-etasje__tittel">
+        <span class="vf-boksplass">${vfAlleBoks(rader, `Marker alle i ${navn}`)}</span>
         ${rediger ? `<input class="e-input vf-navnefelt" id="vf-etasjenavn" maxlength="40" value="${eEsc(VF.navn.verdi)}" aria-label="Navn på etasjen">
           <button type="button" class="e-knapp e-knapp--ikon" data-handling="vfLagreNavn" title="Bekreft" aria-label="Bekreft">${E_IKON.sjekk}</button>
           <button type="button" class="e-knapp e-knapp--ikon" data-handling="vfAvbrytNavn" title="Avbryt redigering" aria-label="Avbryt redigering">${E_IKON.kryss}</button>`
@@ -183,7 +191,6 @@ function vfEtasje(pf, a, etasje, kanLegge) {
       if (d.hva === 'med') rader.forEach(f => { f.enabled = true; });
       if (d.hva === 'ut') rader.forEach(f => { f.enabled = false; });
       if (d.hva === 'pakke') rader.forEach(f => { f.pakke = Number(d.pakke); f.enabled = true; });
-      rader.forEach(f => VF.valgt.delete(f.id));
       lukk();
     }
   });

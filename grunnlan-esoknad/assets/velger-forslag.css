@@ -62,3 +62,17 @@
 .vf-etasjeknapper { display: flex; flex-wrap: wrap; gap: 4px; }
 .vf-etasjeknapper .e-knapp { gap: 6px; min-height: 36px; padding-block: 4px; font-size: var(--text-sm, 0.9375rem); }
 .vf-etasjeknapper svg { width: 18px; height: 18px; }
+
+/* Avkrysningene står i samme kolonne: adresse, etasje og rader */
+.vf-tabell th:first-child, .vf-tabell td:first-child { width: 20px; padding-left: 6px; padding-right: 6px; }
+.vf-boksplass { flex: 0 0 auto; box-sizing: border-box; width: var(--vf-boks, 44px); display: inline-flex; align-items: center; padding-left: 10px; }
+.vf-boksplass input { width: 20px; height: 20px; margin: 0; accent-color: var(--e-knapp); cursor: pointer; }
+.vf-etasjetopp .e-etasje__tittel { gap: 0; }
+.vf-etasjetopp .e-etasje__tittel > .e-knapp--ikon { margin-left: var(--space-2, 8px); }
+.vf-etasjetopp .vf-navnefelt + .e-knapp--ikon { margin-left: var(--space-2, 8px); }
+.vf-trekk__rad { display: flex; align-items: center; padding-left: var(--space-5, 32px); }
+.vf-trekk__rad .e-trekk__topp { padding-left: 1px; }
+.vf-etasjetopp .vf-boksplass { width: 45px; }
+.vf-handlingslinje .vf-antall { padding-left: 4px; }
+.vf-tabell th.vf-nrhode { padding-left: 10px; }
+.vf-handlingslinje { margin-bottom: var(--space-2, 8px); }
