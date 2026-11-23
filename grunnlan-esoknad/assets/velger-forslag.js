@@ -79,12 +79,13 @@ function vfBygg(pf, b) {
   const alle = rader.length > 0 && rader.every(f => VF.valgt.has(f.id));
   return `<div class="vf-bygg">
       <h2 class="e-h2">${eEsc(S.byggNavn(b))}</h2>
-      ${rader.length ? `<button type="button" class="e-knapp e-knapp--subtil" data-handling="vfVelgAlle" data-ids="${rader.map(f => f.id).join(',')}">${alle ? 'Fjern markering' : 'Marker alle'}</button>` : ''}
+      ${rader.length ? `<button type="button" class="e-knapp e-knapp--subtil" data-handling="vfVelgAlle" data-ids="${rader.map(f => f.id).join(',')}">${alle ? 'Fjern markering' : 'Marker alt'}</button>` : ''}
     </div>`;
 }
 
 function vfMerkSom(pf) {
-  const valgte = vfAlleRader(pf).filter(f => VF.valgt.has(f.id));
+  const alleRader = vfAlleRader(pf);
+  const valgte = alleRader.filter(f => VF.valgt.has(f.id));
   if (!valgte.length) return '';
   const apen = VF.meny;
   const valg = (hva, tekst, ekstra = '') => `<button type="button" role="menuitem" class="vf-meny__valg" data-handling="vfMerk" data-hva="${hva}" ${ekstra}>${tekst}</button>`;
@@ -103,6 +104,7 @@ function vfMerkSom(pf) {
         </div>
       </div>` : ''}
     </div>
+    ${valgte.length < alleRader.length ? `<button type="button" class="vf-pille vf-pille--lys" data-handling="vfVelgAlle" data-ids="${alleRader.map(f => f.id).join(',')}">Marker alt</button>` : ''}
     <button type="button" class="vf-pille vf-pille--lys" data-handling="vfFjernValg">Fjern markering</button>
   </div>`;
 }
