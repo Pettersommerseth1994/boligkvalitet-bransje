@@ -134,7 +134,8 @@ function vfEtasje(pf, a, etasje, kanLegge) {
     return `<tr class="${fo.enabled ? '' : 'er-av'}${radFeil ? ' er-feil' : ''}${VF.valgt.has(fo.id) ? ' vf-markert' : ''}">${celler}${meny}</tr>`;
   };
 
-  return `<div class="e-etasje">
+  const ny = VF.ny && VF.ny.nokkel === nokkel && Date.now() < VF.ny.til;
+  return `<div class="e-etasje${ny ? ' vf-ny' : ''}" data-vf-etasje="${nokkel}">
     <div class="e-etasje__topp vf-etasjetopp">
       <div class="e-etasje__tittel">
         ${eEsc(navn)}
@@ -250,6 +251,19 @@ function vfNavneModal(navn) {
     const org = steg.handlinger[h];
     steg.handlinger[h] = (d, pf, e) => { VF.etMeny = null; return org(d, pf, e); };
   });
+
+  const orgKopier = steg.handlinger.kopierEtasje;
+  steg.handlinger.kopierEtasje = (d, pf, e) => {
+    const nokkel = `${d.aid}|${B.nesteEtasje(pf, Number(d.aid), d.etasje[0])}`;
+    VF.ny = { nokkel, til: Date.now() + 1200 };
+    setTimeout(() => {
+      const el = document.querySelector(`[data-vf-etasje="${nokkel}"]`);
+      if (!el) return;
+      const rolig = matchMedia('(prefers-reduced-motion: reduce)').matches;
+      el.scrollIntoView({ behavior: rolig ? 'auto' : 'smooth', block: 'center' });
+    }, 0);
+    return orgKopier(d, pf, e);
+  };
 
   document.addEventListener('click', e => {
     if (VF.meny && !e.target.closest('.vf-meny-boks')) { lukk(); F.tegn(); }

@@ -107,3 +107,7 @@
 .vf-handlingslinje .vf-pille--lys { background: transparent; }
 .vf-handlingslinje .vf-pille:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
 
+
+/* Etasjen som nettopp ble duplisert */
+.e-etasje.vf-ny { border-radius: var(--radius-md, 8px); animation: vf-ny 1.2s ease-out; }
+@keyframes vf-ny { 0%, 60% { background: var(--hb-blue-100); box-shadow: 0 0 0 8px var(--hb-blue-100); } 100% { background: transparent; box-shadow: 0 0 0 8px transparent; } }
