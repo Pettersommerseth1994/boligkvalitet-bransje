@@ -206,7 +206,7 @@ function kortBoenheter(pf) {
   const gruppe = (navn, g) => (g ? OP.rad(`${navn}${g.vektet ? ', vektet' : ''}`,
     `${g.utslipp == null ? '' : `${fmtGrense(g.utslipp)} mot grenseverdien `}${fmtGrense(g.grense)} kg CO₂-ekv./m² BTA${g.ok === false ? ' (over grensen)' : ''}`) : '');
   const miljo = kv ? `<dl class="e-dl">${OP.rad('Bygningstyper', eStor(KV_TYPER.filter(t => (k.typer || []).includes(t.type)).map(t => t.tittel.toLowerCase()).join(' og ')))}
-    ${kv.rader.map(d => OP.rad(`${d.t.tittel}, ${KV_DEL[d.del]}`, `${eTusen(d.bta)} m² BTA<span data-endret="6"> (${Math.round((eNum(d.bta) / kv.totalBta) * 100)} % av prosjektet)</span>${kvTall(d.co2) ? `, ${eEsc(d.co2)} kg CO₂-ekv./m² BTA mot grenseverdien ${d.grense}` : ''}`)).join('')}
+    ${kv.rader.map(d => OP.rad(`${d.t.tittel}, ${KV_DEL[d.del]}`, `${eTusen(d.bta)} m² BTA<span> (${Math.round((eNum(d.bta) / kv.totalBta) * 100)} % av prosjektet)</span>${kvTall(d.co2) ? `, ${eEsc(d.co2)} kg CO₂-ekv./m² BTA mot grenseverdien ${d.grense}` : ''}`)).join('')}
     ${gruppe('Bygg uten kjeller', kv.bygg)}${gruppe('Kjeller', kv.kjeller)}</dl>`
     : '';
   const kvalitetskrav = !a && S.visBK(pf) && B.kvalitetsBk(pf).length ? `<h3 class="e-h3">Kvalitetskrav</h3>

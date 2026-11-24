@@ -49,7 +49,7 @@ const E_VERSJONER = [
     nr: 2,
     navn: 'Post-it-lappene fra Miro',
     dato: '16. november 2026',
-    mappe: '',
+    mappe: 'v2/',
     endringer: [
       { side: 'opprett-soknad.html', tekst: 'Transformasjon erstatter ombygging: «Gjøre om bygg til boligformål (transformasjon)» og «Lån til transformasjon».' },
       { side: 'soknad.html', soknad: 'livslop', steg: 'boligkvaliteter', tekst: 'Livsløpsstandard og transformasjon spør ikke lenger om BTA, klimagassavtrykk og kjeller. Klimaspørsmålene gjelder bare Klimavennlig bolig.' },
@@ -63,6 +63,21 @@ const E_VERSJONER = [
       { side: 'soknad.html', soknad: 'klima', steg: 'boligkvaliteter', tekst: 'En boenhet over arealgrensen for bygningstypen får et «i» i stedet for «?». Trykk på det for å se merknaden. Antallet med og uten i låneutmålingen står under.' },
       { side: 'soknad.html', soknad: 'klima', steg: 'boligkvaliteter', tekst: 'Valgene på hver boenhet (legg til, dupliser, slett) ligger bak tre prikker, som ved oppgradering.' },
       { side: 'soknad.html', soknad: 'klima', steg: 'boligkvaliteter', tekst: 'Kolonnene i tabellen med grenseverdier heter «Antatt utslipp» og «Grenseverdi».' }
+    ]
+  },
+  {
+    nr: 3,
+    navn: 'Boenhetstabellen ved oppgradering',
+    dato: '24. november 2026',
+    mappe: '',
+    endringer: [
+      { side: 'soknad.html', soknad: 'oppgradering', steg: 'boligkvaliteter', tekst: 'Kryss av for boenheter, eller «Marker alt» ved bygget. «Marker som»-pillen nederst setter låneutmålingen eller pakken, fjerner markeringen eller sletter de markerte.' },
+      { side: 'soknad.html', soknad: 'oppgradering', steg: 'boligkvaliteter', tekst: 'Låneutmålingen står sist i tabellen som en nedtrekksliste med Med og Ikke med. Rader som ikke er med, har hvit bakgrunn.' },
+      { side: 'soknad.html', soknad: 'oppgradering', steg: 'boligkvaliteter', tekst: 'Etasjen har tre prikker med Endre navn, Dupliser og Slett. Navnet endres i en egen dialog.' },
+      { side: 'soknad.html', soknad: 'oppgradering', steg: 'boligkvaliteter', tekst: 'Én knapp, «Legg til etasje», nederst under hver adresse.' },
+      { side: 'soknad.html', soknad: 'oppgradering', steg: 'boligkvaliteter', tekst: 'Pakkene kan få eget navn med blyanten ved navnet. Navnet brukes i tabellen, pillen og oppsummeringen.' },
+      { side: 'soknad.html', soknad: 'oppgradering', steg: 'boligkvaliteter', tekst: 'Tettere tabell uten sidelengs rulling: Bolignummer, Boligbetegnelse, BRA-i og Rom, med lik avstand. Nye og dupliserte etasjer, boenheter og pakker blinker blått et øyeblikk.' },
+      { side: 'soknad.html', soknad: 'oppgradering', steg: 'boligkvaliteter', tekst: 'Oversikten over antall teller alle boenhetene på de valgte adressene, og trekker fra dem som ikke er med i låneutmålingen.' }
     ]
   }
 ];
@@ -150,7 +165,8 @@ const E_VERSJONER = [
   const PASSER = {
     klima: s => s.status === 'UFERDIG' && s.laneformal === 'KLIMAVENNLIG',
     livslop: s => s.status === 'UFERDIG' && s.laneformal === 'LIVSLOPSSTANDARD',
-    innvilget: s => s.hilsStatus === 'INNVILGET' && s.laneformal === 'KLIMAVENNLIG'
+    innvilget: s => s.hilsStatus === 'INNVILGET' && s.laneformal === 'KLIMAVENNLIG',
+    oppgradering: s => s.status === 'UFERDIG' && s.prosjektTiltakKode === 'OPPGRADERING'
   };
   const finnSoknad = passer => ((typeof eTilstand === 'function' && eTilstand()) || { soknader: [] }).soknader.find(passer);
 

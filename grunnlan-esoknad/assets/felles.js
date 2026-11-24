@@ -8,7 +8,7 @@
    ────────────────────────────────────────────────────────────────── */
 
 const E_TJENESTE = 'Søknad om lån og tilskudd fra Husbanken';
-const E_LAGER = 'boligkvalitet-bransje-v2';
+const E_LAGER = 'boligkvalitet-bransje-v3';
 const E_BRUKER = 'Ola Nordmann';
 
 /* ═══ Foretak ═════════════════════════════════════════════════════

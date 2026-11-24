@@ -45,10 +45,11 @@ annen låntaker og tilskudd til utleieboliger virker som i dag.
 | `utbetaling.html` | Søknad om utbetaling for klimavennlig bolig, med klimagassregnskapet. Vises på en innvilget klimavennlig søknad. |
 | `saksbehandler.html` | Saksbehandlers visning (prototype): klimatallene med andeler og grenseverdier, boenhetene, og fila til Elements. Vises på innsendte søknader. |
 
-Tre eksempelsøknader ligger klare første gang: en påbegynt med
+Fire eksempelsøknader ligger klare første gang: en påbegynt med
 livsløpsstandard, som også viser «Utsett sletting», en påbegynt klimavennlig
 med både blokk og småhus, stoppet på Bolig, der én leilighet er over
-arealgrensen, og en innvilget klimavennlig, som viser
+arealgrensen, en påbegynt oppgradering med to pakker, stoppet på Bolig, og
+en innvilget klimavennlig, som viser
 igangsettelse, utsatt oppstart og endre låntaker. «Start på nytt» henter dem
 tilbake.
 
@@ -63,7 +64,8 @@ sammen med hvordan du legger til en ny versjon. Forslagssidene
 | Versjon | Mappe | Hva som endret seg |
 | --- | --- | --- |
 | 1, 9. november 2026 | `v1/` | Klimavennlig bolig med alternativ 2 fra Miro: blokk og/eller småhus, et kort per type, grenseverdier og klimagassbudsjett. |
-| 2, 16. november 2026 | denne mappa | Post-it-lappene fra Miro: transformasjon med kontakt med regionkontoret, klimaspørsmål bare for Klimavennlig bolig, småhus opptil 200 m² med «i» over grensen, andeler i oppsummeringen, søknad om utbetaling med klimagassregnskap, og saksbehandlers visning med fil til Elements. |
+| 2, 16. november 2026 | `v2/` | Post-it-lappene fra Miro: transformasjon med kontakt med regionkontoret, klimaspørsmål bare for Klimavennlig bolig, småhus opptil 200 m² med «i» over grensen, andeler i oppsummeringen, søknad om utbetaling med klimagassregnskap, og saksbehandlers visning med fil til Elements. |
+| 3, 24. november 2026 | denne mappa | Boenhetstabellen ved oppgradering: avkrysning og «Marker som»-pille for låneutmåling, pakke og sletting, låneutmålingen som nedtrekk sist i tabellen, meny på etasjen med Endre navn, Dupliser og Slett, én «Legg til etasje» per adresse, navn på pakkene, tettere tabell, og blå markering av nye etasjer, boenheter og pakker. |
 
 Hver versjon lagrer svarene sine for seg.
 

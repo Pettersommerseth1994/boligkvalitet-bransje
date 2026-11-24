@@ -145,7 +145,7 @@ function ogPakkeKort(d, p, vis) {
   return d.pakker.map((x, j) => {
     const mm = ogManglerFor(d, x);
     const navn = eEsc(ogPakkeTittel(x, j));
-    return eKort({ tittel: `${navn}<button type="button" class="e-knapp e-knapp--ikon og-pakkenavn" data-handling="ogEndrePakkenavn" data-j="${j}" title="Endre navn" aria-label="Endre navn på ${navn}">${E_IKON.blyant}</button>`, niva: 3, kropp: `
+    return eKort({ tittel: `${navn}<button type="button" class="e-knapp e-knapp--ikon og-pakkenavn" data-endret="5" data-handling="ogEndrePakkenavn" data-j="${j}" title="Endre navn" aria-label="Endre navn på ${navn}">${E_IKON.blyant}</button>`, niva: 3, kropp: `
       ${ogKarakter(d) ? `<div class="e-to">
         <div class="e-felt" data-feltboks="${p}.pakker.${j}.fore"><label class="e-felt__label" for="${F.id(`${p}.pakker.${j}.fore`)}">Energikarakter før</label>${ogKarakterSelect(`${p}.pakker.${j}.fore`, `Energikarakter før for ${navn}`, x.fore)}${ogKrevd(vis, mm.fore)}</div>
         <div class="e-felt" data-feltboks="${p}.pakker.${j}.etter"><label class="e-felt__label" for="${F.id(`${p}.pakker.${j}.etter`)}">Energikarakter etter</label>${ogKarakterSelect(`${p}.pakker.${j}.etter`, `Energikarakter etter for ${navn}`, x.etter)}${ogKrevd(vis, mm.etter)}</div>

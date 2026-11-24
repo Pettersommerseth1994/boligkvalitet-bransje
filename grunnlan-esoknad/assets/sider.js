@@ -209,8 +209,8 @@ function opprett() {
           <dl class="e-dl"><dt>E-post</dt><dd>${epost.length ? epost.map(eEsc).join('<br>') : 'Ingen'}</dd><dt>Telefon</dt><dd>${tlf.length ? tlf.join('<br>') : 'Ingen'}</dd></dl>
           ${F.gruppefeil('harGyldigEpost')}` })}
 
-        <div data-endret="1">${F.radio({ felt: 'tiltak', label: 'Hva skal dere gjøre?', valg: TILTAK_BRANSJE.map(k => ({ v: k, l: S.TILTAK[k].valg })) })}</div>
-        ${d.tiltak === 'OMBYGGING' ? eCallout('info', `<p>Lån til transformasjon vurderer vi for hvert prosjekt for seg. Ta kontakt med regionkontoret i Husbanken før dere søker. Da kan vi se på prosjektet sammen med dere i et forprosjekt.</p>`, false, ' data-endret="5"') : ''}
+        <div>${F.radio({ felt: 'tiltak', label: 'Hva skal dere gjøre?', valg: TILTAK_BRANSJE.map(k => ({ v: k, l: S.TILTAK[k].valg })) })}</div>
+        ${d.tiltak === 'OMBYGGING' ? eCallout('info', `<p>Lån til transformasjon vurderer vi for hvert prosjekt for seg. Ta kontakt med regionkontoret i Husbanken før dere søker. Da kan vi se på prosjektet sammen med dere i et forprosjekt.</p>`, false, '') : ''}
 
         ${r.laneformal(d) ? F.radio({ felt: 'laneformal', label: 'Velg formål', valg: Object.entries(S.LANEFORMAL).map(([v, l]) => ({ v, l })) }) : ''}
 

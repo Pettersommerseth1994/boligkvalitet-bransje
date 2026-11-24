@@ -177,7 +177,7 @@ S.VEDLEGG = [
     regel: pf => !S.salg(pf) && eNum(S.okonomi(pf).andrelan) > 0 },
   { id: 'DOKUMENTASJONTILSKUDDANDRE_VEDLEGG', tittel: 'Dokumentasjon på tilskudd fra andre', hjelp: 'Skriftlig beskrivelse av tilskudd.',
     regel: pf => !S.salg(pf) && eNum(S.okonomi(pf).andreTilskudd) > 0 },
-  { id: 'KLIMABUDSJETT_VEDLEGG', endret: 4, tittel: 'Klimagassbudsjett', hjelp: 'Klimagassbudsjettet må være laget etter NS 3720:2018. Ved søknad om utbetaling eller før videresalg må ferdig klimagassregnskap sendes inn.',
+  { id: 'KLIMABUDSJETT_VEDLEGG', tittel: 'Klimagassbudsjett', hjelp: 'Klimagassbudsjettet må være laget etter NS 3720:2018. Ved søknad om utbetaling eller før videresalg må ferdig klimagassregnskap sendes inn.',
     /* Bare for «Klimavennlig bolig», og bare når de har svart ja på at budsjettet er laget */
     regel: pf => S.erKlimavennlig(pf) && (pf.klima || {}).harKlimabudsjett === true },
   { id: 'FASADETEGNINGER_VEDLEGG', tittel: 'Fasadetegninger', hjelp: 'Fasadetegningen må ha angitt målestokk.', regel: pf => S.er(pf, 'OPPFORING', 'OPPGRADERING', 'OMBYGGING') },
@@ -309,5 +309,28 @@ function eEksempelsoknader(t) {
     id: id(), adresseId: k1, etasje: et, bruksenhetsNr: nr, enabled: true, boligbetegnelse: `A${ei + 1}${ni + 1}`,
     bruksAreal: ei === 1 && ni === 1 ? '142' : String(64 + ni * 18), antallRom: String(2 + ni)
   })));
-  return [klimavennlig, pabegynt, innvilget];
+  /* 4. Påbegynt oppgradering med to pakker, stoppet på Bolig */
+  const m = { fraMatrikkelen: true, enabled: false };
+  const p1 = id(); const p2 = id(); const o1 = id(); const o2 = id();
+  const oppgradering = {
+    id: id(), navn: 'Parkveien oppgradering', status: 'UFERDIG', hilsStatus: 'UKJENT', opprettet: dagerSiden(5),
+    sistEndretDato: dagerSiden(2), sistEndretAv: E_BRUKER,
+    prosjektTiltakKode: 'OPPGRADERING', formalKode: 'SALG', finansieringsProdukter: ['OPPGRADERING'],
+    soker, okonomi: {}, vedlegg: [], besokt: ['prosjektinformasjon', 'eiendomsopplysninger', 'boligkvaliteter'],
+    eiendommer: [{ id: id(), kommuneNr: '3301', gaardsNr: '112', bruksNr: '9', festeNr: '0', seksjonsNr: '0', fraMatrikkelen: true, bygg: [
+      { id: id(), navn: 'Bygg 1', fraMatrikkelen: true, bygningstypeFraMatrikkelen: '142', visForValgtTiltak: true, erBygningstypeFraMatrikkelenRiktig: true, adresser: [],
+        adresserFraMatrikkelen: [{ ...m, id: o1, veiNavn: 'Kirkeveien', veiNummer: 4, veiBokstav: 'A', enabled: true, antallBoliger: 6, bruksareal: 68 },
+          { ...m, id: o2, veiNavn: 'Kirkeveien', veiNummer: 4, veiBokstav: 'B', enabled: true, antallBoliger: 6, bruksareal: 74 }] },
+      { id: id(), navn: 'Bygg 2', fraMatrikkelen: true, bygningstypeFraMatrikkelen: '131', visForValgtTiltak: true, adresser: [],
+        adresserFraMatrikkelen: [6, 8, 10].map(n => ({ ...m, id: id(), veiNavn: 'Kirkeveien', veiNummer: n, veiBokstav: '', antallBoliger: 1, bruksareal: n === 10 ? 118 : 112 })) }] }],
+    boenheter: [], boligkonfigurasjoner: [],
+    oppg: { mal: 'ENERGI', energivei: 'KARAKTER', pakker: [{ id: p1, fore: 'F', etter: 'D', tiltak: ['TAK', 'VINDUER'] }, { id: p2, fore: 'D', etter: 'C', tiltak: ['VINDUER'] }] },
+    oppstart: neste(4), ferdig: neste(13), kjop: false, sentralGodkjenning: true, naerstaendeArbeid: false, forbildeprosjekt: false,
+    kontaktinformasjon: { navn: E_BRUKER, epost: 'ola.nordmann@fjordbyen.example', telefonNr: '40000011' }, utfyllingssteg: 'boligkvaliteter'
+  };
+  [[o1, 68], [o2, 74]].forEach(([adr, areal], ai) => ['H01', 'H02', 'H03'].forEach((et, ei) => ['01', '02'].forEach(nr => {
+    const med = ai === 0 && ei < 2;
+    oppgradering.boenheter.push({ id: id(), adresseId: adr, etasje: et, bruksenhetsNr: nr, enabled: med, fraMatrikkelen: true, bruksAreal: areal, antallRom: '3', ...(med ? { pakke: p2 } : {}) });
+  })));
+  return [oppgradering, klimavennlig, pabegynt, innvilget];
 }

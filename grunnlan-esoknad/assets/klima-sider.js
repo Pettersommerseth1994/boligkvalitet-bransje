@@ -42,7 +42,7 @@ function utbetaling() {
     tegn: () => `
       <h3 class="e-h3" style="text-align:center">${eEsc(pf.navn)}</h3>
       <h1 class="e-h1 e-h1--senter">Søknad om utbetaling</h1>
-      <div data-endret="7">
+      <div>
       ${eCallout('noytral', `<p>For å få lånet til klimavennlig bolig utbetalt må dere sende inn et ferdig klimagassregnskap. Regnskapet skal lages etter byggteknisk forskrift § 17-1, med metoden i NS 3720:2018.</p>
         <p class="e-mb0">Regnskapet bekrefter at klimagassutslippene er de samme som dere oppga i klimagassbudsjettet da dere søkte.</p>`)}
       ${eKort({ tittel: 'Dette oppga dere i søknaden', kropp: klimaTabell(pf, { grenser: false }) })}
@@ -114,12 +114,12 @@ function saksbehandler() {
     <h3 class="e-h3" style="text-align:center">${eEsc(pf.navn)} · ${eEsc(pf.saksreferanse || pf.id)}</h3>
     <h1 class="e-h1 e-h1--senter">Saksbehandlers visning</h1>
     ${eCallout('info', '<p>Prototype av hva saksbehandler ser av klimatallene og boenhetene. Den ekte visningen ligger i saksbehandlingsløsningen.</p>')}
-    ${S.erKlimavennlig(pf) ? `<div data-endret="8">${eKort({ tittel: 'Klimagassavtrykk', kropp: `
+    ${S.erKlimavennlig(pf) ? `<div>${eKort({ tittel: 'Klimagassavtrykk', kropp: `
       <dl class="e-dl"><dt>Formål</dt><dd>${S.LANEFORMAL[pf.laneformal]}</dd>
         <dt>Klimagassbudsjett etter NS 3720:2018</dt><dd>${(pf.klima || {}).harKlimabudsjett ? 'Ja, lastet opp' : 'Nei'}</dd>
         <dt>Klimagassregnskap</dt><dd>${pf.utbetalingSokt ? 'Sendt inn med søknad om utbetaling' : 'Kommer ved søknad om utbetaling'}</dd></dl>
       ${klimaTabell(pf)}` })}</div>` : ''}
-    <div data-endret="9">${eKort({ tittel: 'Boenheter', kropp: rader.length ? `
+    <div>${eKort({ tittel: 'Boenheter', kropp: rader.length ? `
       <div class="e-tabell-rulle"><table class="e-tabell">
         <thead><tr><th>Adresse</th><th>Bolig</th><th>Bygningstype</th><th class="e-tall">Bruksareal</th><th class="e-tall">Arealgrense</th><th>Med i låneutmåling</th></tr></thead>
         <tbody>${rader.map(x => `<tr><td>${eEsc(x.adresse)}</td><td>${eEsc(x.bolig)}</td><td>${eEsc(x.type)}</td><td class="e-tall">${eEsc(x.areal)}</td><td class="e-tall">${x.grense}</td><td>${x.medIUtmaling ? 'Ja' : 'Nei'}</td></tr>`).join('')}</tbody>
