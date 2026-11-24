@@ -93,7 +93,7 @@
 
 /* «Merk som» som flytende pille nederst i vinduet */
 .vf-handlingslinje {
-  position: fixed; left: 50%; bottom: 60px; transform: translateX(-50%); z-index: 40;
+  position: fixed; left: 50%; bottom: 30px; transform: translateX(-50%); z-index: 40;
   flex-wrap: nowrap; max-width: calc(100vw - 32px); margin: 0; padding: 8px 8px 8px 20px;
   border-radius: 999px; background: var(--hb-slate-800); border: 0; color: #fff;
   box-shadow: 0 10px 30px rgba(0,0,0,.18), 0 2px 6px rgba(0,0,0,.08);
