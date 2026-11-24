@@ -13,5 +13,6 @@ if (ny) t.soknader = t.soknader.filter(x => x.id !== SOKNAD.id).concat([JSON.par
 t.org = ORG;
 localStorage.setItem(NOKKEL, JSON.stringify(t));
 
-location.replace("soknad.html?id=" + SOKNAD.id + "&steg=boligkvaliteter");
+const utmaling = new URLSearchParams(location.search).get("utmaling");
+location.replace("soknad.html?id=" + SOKNAD.id + "&steg=boligkvaliteter" + (utmaling ? "&utmaling=" + encodeURIComponent(utmaling) : ""));
 </script></body></html>

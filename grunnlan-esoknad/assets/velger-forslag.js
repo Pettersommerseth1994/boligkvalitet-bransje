@@ -6,12 +6,22 @@
    med pakken fra «Merk som»-menyen.
    ────────────────────────────────────────────────────────────────── */
 
+const VF_UTMALING_NEDTREKK = new URLSearchParams(location.search).get('utmaling') === 'nedtrekk';
+
 const VF = { valgt: new Set(), meny: false, etMeny: null };
 
 const vfEtasjenavn = (pf, aid, etasje) => ((pf.etasjenavn || {})[`${aid}|${etasje}`]) || `Etasje ${etasje}`;
 
 const vfAktiv = pf => S.oppgPakker(pf);
 const vfNavn = fo => `${fo.etasje}${fo.bruksenhetsNr}`;
+
+function vfUtmalingSelect(pf, fo) {
+  const p = `boenheter.${B.indeks(pf, fo)}.enabled`;
+  return `<select class="vf-utmalingsvalg ${fo.enabled ? 'vf-utmalingsvalg--med' : ''}" id="${F.id(p)}" data-felt="${p}" data-type="bool" aria-label="Låneutmålingen for ${vfNavn(fo)}">
+    <option value="true" ${fo.enabled ? 'selected' : ''}>Med</option>
+    <option value="false" ${fo.enabled ? '' : 'selected'}>Ikke med</option>
+  </select>`;
+}
 
 const vfUtmaling = fo => (fo.enabled
   ? '<span class="vf-status vf-status--med">Med</span>'
@@ -128,14 +138,14 @@ function vfEtasje(pf, a, etasje, kanLegge) {
     const radFeil = F.visFeil && fo.enabled && F.feilliste.some(x => x.nokkel.startsWith(`boenheter.${i}.`));
     const celler = `<td>${vfVelgBoks(fo)}</td><td class="vf-nr">${vfNavn(fo)}</td>
       ${kolonner.slice(0, 3).map(k => vfCelle(pf, fo, k)).join('')}
-      ${vfPakkeSelect(pf, fo)}${kolonner.slice(3).map(k => vfCelle(pf, fo, k)).join('')}<td>${vfUtmaling(fo)}</td>`;
+      ${vfPakkeSelect(pf, fo)}${kolonner.slice(3).map(k => vfCelle(pf, fo, k)).join('')}<td>${VF_UTMALING_NEDTREKK ? vfUtmalingSelect(pf, fo) : vfUtmaling(fo)}</td>`;
     const meny = kanRedigere ? `<td class="e-tabell__handling">${radMeny(fo, kanLegge)}</td>` : '';
     return `<tr class="${fo.enabled ? '' : 'er-av'}${radFeil ? ' er-feil' : ''}${VF.valgt.has(fo.id) ? ' vf-markert' : ''}${nyTid && VF.ny.rader.has(fo.id) ? ' vf-ny' : ''}">${celler}${meny}</tr>`;
   };
 
   const nyTid = VF.ny && Date.now() < VF.ny.til;
   const ny = nyTid && VF.ny.etasjer.has(nokkel);
-  return `<div class="e-etasje${ny ? ' vf-ny' : ''}" data-vf-etasje="${nokkel}">
+  return `<div class="e-etasje${ny ? ' vf-ny' : ''}${VF_UTMALING_NEDTREKK ? ' vf-utmaling-nedtrekk' : ''}" data-vf-etasje="${nokkel}">
     <div class="e-etasje__topp vf-etasjetopp">
       <div class="e-etasje__tittel">
         ${eEsc(navn)}
