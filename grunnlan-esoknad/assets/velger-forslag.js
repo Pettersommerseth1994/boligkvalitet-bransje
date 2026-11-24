@@ -6,7 +6,7 @@
    med pakken fra «Merk som»-menyen.
    ────────────────────────────────────────────────────────────────── */
 
-const VF_UTMALING_NEDTREKK = new URLSearchParams(location.search).get('utmaling') === 'nedtrekk';
+const VF_UTMALING_NEDTREKK = new URLSearchParams(location.search).get('utmaling') !== 'tag';
 
 const VF = { valgt: new Set(), meny: false, etMeny: null };
 
